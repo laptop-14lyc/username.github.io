@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>我的主页</title>
   <style>
     body {
@@ -128,6 +128,52 @@
       0% { opacity: 1; transform: translateY(0) scale(1); }
       100% { opacity: 0; transform: translateY(-100vh) scale(0); }
     }
+
+    /* 密码遮罩样式 */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .password-box {
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .password-box input {
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .password-box button {
+      padding: 10px;
+      margin-top: 10px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .password-box button:hover {
+      background: #0097a7;
+    }
+    .error-msg {
+      color: red;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* 只为圣经和史记启用 relative 定位 */
+    section#shiji,
+    section#sj {
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -180,6 +226,15 @@
   </section>
 
   <section id="shiji" class="clearfix">
+    <div class="overlay" id="shijiOverlay">
+      <div class="password-box">
+        <h3>请输入访问密码</h3>
+        <input type="password" id="shijiPassword">
+        <br>
+        <button onclick="checkPassword('shiji')">提交</button>
+        <p class="error-msg" id="shijiError">密码错误，请重试</p>
+      </div>
+    </div>
     <details>
       <summary>史记</summary>
       <div class="chapter-list">
@@ -196,9 +251,18 @@
   </section>
 
   <section id="sj">
+    <div class="overlay" id="sjOverlay">
+      <div class="password-box">
+        <h3>请输入访问密码</h3>
+        <input type="password" id="sjPassword">
+        <br>
+        <button onclick="checkPassword('sj')">提交</button>
+        <p class="error-msg" id="sjError">密码错误，请重试</p>
+      </div>
+    </div>
     <details>
       <summary>圣经</summary>
-      <p>这是九班广为传唱的圣经（非本人制作，仅供收集）</p>
+       <p>这是九班广为传唱的圣经（非本人制作，仅供收集）</p>
       <p>经典原款<br>傻逼田锦航喜欢李雯萱，整天跟个小孩一样耍小孩子气，还有我告诉你我手机挂不了电话，没接是因为没听见，你以为你不学别人也不学呢，我跟女生出去最起码所有花钱都是AA，跟你出去我他妈买15一杯饮料我他妈一口都没喝，到最后给钱你还给的最少，吃冰糖葫芦也不是你出的钱，花别人钱的时候自由自在，一到让你出钱了就闭嘴了，原来你也是铁公鸡，一毛不拔说的是钱，你有这么多好朋友哪个能随时到你家楼下，十一假期回来我就要考试，我干了两天去给你装电脑，一个服务器我出了一块100多块钱的硬盘还又出了150块钱，我欠你吗，你随时都能看手机玩电脑，我不行，我还有学习生活，我得学习，我不学我就废了，语文考他妈40分比汉奸分都低，有的时候不找找自己问题就到处抱怨</p>
       <p>经典文言文版<br>暂时失传</p>
       <p>zzh游戏版<br>傻逼赵子豪喜欢玩极限竞速.地平线5（王清终极版），整天跟个小孩一样耍小孩子气，还有我告诉你我手机挂不了电话，没接是因为没听见，你以为你不学别人也不学呢，我天天晚上写作业你就给我打电话，用着极其猥琐的声音拉我打游戏，还发出geigeigei的笑声，我都说了我要写作业还一直每隔半个小时给我打电话，有的时候我没接电话就用肮脏的口吻各处骂脏话。而且作业是只写语文的，其他的是早上补的，每天晚上打开Deepseek5分钟抄完作业就骄傲的以为自己写完作业然后各种玩，早上来学校第一件事就是找英语课代表说我作业交了，然后上第一节课找数学课代表抄作业，天天让我给你传作业，我欠你吗。我寻思新航路的开辟也没到中国啊，还有奴隶制，在你眼中什么都是史，除了高贵伟大性价比高的xbox主机，是每个月签订不平等条约才能玩到游戏，是必须要外接显示屏的，是有着非人性化的手柄的，我一说玩deck就说是史还全班带节奏，作为游戏主机你们xbox能做到看片，很好的照顾到你的需求，体现了生物的多样性，而且我之前去找语文老师背课文手机没上密码，就3分钟不到你给我手机里放片然后自己就跑了。你随时都能看手机玩电脑玩做xbox的忠犬，我不行，我还有学习生活，我得学习，我不学我就废了，数学考他妈28分比汉奸分都低，有的时候不找找自己问题就到处抱怨</p>
@@ -231,6 +295,17 @@
         header.classList.remove('scrolled');
       }
     });
+
+    function checkPassword(sectionId) {
+      const correctPassword = "7800";
+      const input = document.getElementById(sectionId + "Password").value;
+      const errorMsg = document.getElementById(sectionId + "Error");
+      if (input === correctPassword) {
+        document.getElementById(sectionId + "Overlay").style.display = "none";
+      } else {
+        errorMsg.style.display = "block";
+      }
+    }
   </script>
 </body>
 </html>
