@@ -324,6 +324,177 @@
       <p>逼格强制爱版<br>傻逼wty喜欢llf，整天跟个小孩一样耍小孩子气，还有我告诉你我手机挂不了电话，没接是因为没听见，你以为你不学别人也不学呢，我跟女生出去最起码所有花钱都是AA，跟你出去我他妈买15一杯饮料我他妈一口都没喝，到最后给钱你还给的最少，吃冰糖葫芦也不是你出的钱，花别人钱的时候自由自在，一到让你出钱了就闭嘴了，原来你也是铁公鸡，一毛不拔说的是钱，你有这么多好朋友哪个能随时到你家楼下，十一假期回来我就要考试，我干了两天去给你装电脑，一个服务器我出了一块100多块钱的硬盘还又出了150块钱，我欠你吗，你随时都能看手机玩电脑，我不行，我还有学习生活，我得学习，我不学我就废了，语文考他妈40分比汉奸分都低，有的时候不找找自己问题就到处抱怨</p>
     </details>
   </section>
+  
+<section id="share">
+  <details>
+    <summary>扫雷</summary>
+    <div class="link-buttons">
+      <div id="minesweeper"></div>
+    </div>
+  </details>
+</section>
+
+<style>
+  .minesweeper-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 30px);
+    grid-gap: 2px;
+    margin-top: 10px;
+  }
+  .cell {
+    width: 30px;
+    height: 30px;
+    background-color: #ccc;
+    text-align: center;
+    line-height: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+  }
+  .cell.revealed {
+    background-color: #eee;
+    cursor: default;
+  }
+  .cell.flag {
+    background-color: #f1c40f;
+  }
+</style>
+
+<script>
+  const rows = 10;
+  const cols = 10;
+  const mineCount = 10;
+  const cells = [];
+  let revealedCount = 0;
+  let flaggedCount = 0;
+
+  function createBoard() {
+    const container = document.getElementById('minesweeper');
+    const grid = document.createElement('div');
+    grid.className = 'minesweeper-grid';
+
+    for (let i = 0; i < rows * cols; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.index = i;
+      grid.appendChild(cell);
+      cells.push(cell);
+    }
+
+    container.appendChild(grid);
+
+    // 随机放置地雷
+    const mineIndices = new Set();
+    while (mineIndices.size < mineCount) {
+      mineIndices.add(Math.floor(Math.random() * rows * cols));
+    }
+
+    for (let i = 0; i < cells.length; i++) {
+      if (mineIndices.has(i)) {
+        cells[i].dataset.mine = 'true';
+      }
+    }
+
+    // 计算每个格子周围的地雷数量
+    cells.forEach(cell => {
+      const index = parseInt(cell.dataset.index, 10);
+      const neighbors = getNeighbors(index);
+      let mineCountAround = 0;
+
+      neighbors.forEach(neighbor => {
+        if (cells[neighbor] && cells[neighbor].dataset.mine === 'true') {
+          mineCountAround++;
+        }
+      });
+
+      if (mineCountAround > 0) {
+        cell.dataset.mineCount = mineCountAround;
+      }
+    });
+
+    // 左键点击事件 - 显示格子
+    cells.forEach(cell => {
+      cell.addEventListener('click', () => {
+        if (cell.classList.contains('revealed') || cell.classList.contains('flag')) return;
+
+        revealCell(cell);
+      });
+    });
+
+    // 右键点击事件 - 标记/取消标记旗帜
+    cells.forEach(cell => {
+      cell.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (cell.classList.contains('revealed')) return;
+
+        if (cell.classList.contains('flag')) {
+          cell.classList.remove('flag');
+          flaggedCount--;
+        } else {
+          if (flaggedCount < mineCount) {
+            cell.classList.add('flag');
+            flaggedCount++;
+          }
+        }
+      });
+    });
+  }
+
+  function getNeighbors(index) {
+    const neighbors = [];
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+
+    // 上、下、左、右以及四个对角线邻居
+    const directions = [
+      [-1, 0], [1, 0], [0, -1], [0, 1],
+      [-1, -1], [-1, 1], [1, -1], [1, 1]
+    ];
+
+    directions.forEach(([dRow, dCol]) => {
+      const newRow = row + dRow;
+      const newCol = col + dCol;
+      if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+        neighbors.push(newRow * cols + newCol);
+      }
+    });
+
+    return neighbors;
+  }
+
+  function revealCell(cell) {
+    if (cell.classList.contains('revealed') || cell.classList.contains('flag')) return;
+
+    cell.classList.add('revealed');
+    revealedCount++;
+
+    if (cell.dataset.mine === 'true') {
+      cell.style.backgroundColor = 'red';
+      cell.innerText = '💣';
+      alert('游戏结束！');
+    } else {
+      const mineCountAround = parseInt(cell.dataset.mineCount, 10);
+      if (mineCountAround > 0) {
+        cell.innerText = mineCountAround;
+      } else {
+        const index = parseInt(cell.dataset.index, 10);
+        const neighbors = getNeighbors(index);
+        neighbors.forEach(neighborIndex => {
+          const neighborCell = cells[neighborIndex];
+          if (!neighborCell.classList.contains('revealed')) {
+            revealCell(neighborCell);
+          }
+        });
+      }
+    }
+
+    if (revealedCount === (rows * cols - mineCount)) {
+      alert('恭喜你，赢了！');
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', createBoard);
+</script>
 
   <section id="contact">
     <details>
