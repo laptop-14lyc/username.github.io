@@ -597,161 +597,205 @@
   drawBoard();
 </script>
 
-  <section id="games">
+ <section id="games">
   <details open>
-    <summary>五子棋（AI先手）</summary>
+    <summary>五子棋（AI模式）</summary>
+<p>ps：机械革命4060提供远程算力支持</p>
     <div class="link-buttons">
       <canvas id="gobang" width="600" height="600" style="border:1px solid #ccc;"></canvas>
+      <br>
+      <button onclick="startReplay()">回放棋谱</button>
+      <button onclick="stopReplay()">暂停回放</button>
+      <button onclick="resetGame()">重新开始</button>
     </div>
   </details>
-</section>
 
-<script>
-const canvas = document.getElementById("gobang");
-const ctx = canvas.getContext("2d");
-const size = 15;
-const gridSize = canvas.width / size;
-const board = Array.from({ length: size }, () => Array(size).fill(null));
-let gameOver = false;
-const HUMAN = "O", AI = "X";
+  <script>
+    const canvas = document.getElementById("gobang");
+    const ctx = canvas.getContext("2d");
 
-// 绘制棋盘
-function drawBoard() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "#333";
-  for (let i = 0; i < size; i++) {
-    ctx.beginPath();
-    ctx.moveTo(gridSize / 2, gridSize / 2 + i * gridSize);
-    ctx.lineTo(canvas.width - gridSize / 2, gridSize / 2 + i * gridSize);
-    ctx.stroke();
+    const size = 15;
+    const gridSize = canvas.width / size;
 
-    ctx.beginPath();
-    ctx.moveTo(gridSize / 2 + i * gridSize, gridSize / 2);
-    ctx.lineTo(gridSize / 2 + i * gridSize, canvas.height - gridSize / 2);
-    ctx.stroke();
-  }
-}
+    let board = Array.from({ length: size }, () => Array(size).fill(null));
+    let history = [];
+    let gameOver = false;
+    let replayTimer = null;
+    let replayIndex = 0;
+    const HUMAN = "O", AI = "X";
 
-// 画棋子
-function drawPiece(x, y, player) {
-  ctx.beginPath();
-  ctx.font = "20px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = player === HUMAN ? "#000" : "#d00";
-  ctx.fillText(player, x * gridSize + gridSize / 2, y * gridSize + gridSize / 2);
-}
+    function drawBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#333";
+      for (let i = 0; i < size; i++) {
+        const offset = gridSize / 2;
+        ctx.beginPath();
+        ctx.moveTo(offset, offset + i * gridSize);
+        ctx.lineTo(canvas.width - offset, offset + i * gridSize);
+        ctx.stroke();
 
-// 检查胜利
-function checkWin(x, y, player) {
-  const directions = [[1,0],[0,1],[1,1],[1,-1]];
-  for (let [dx, dy] of directions) {
-    let count = 1;
-    for (let dir = -1; dir <= 1; dir += 2) {
-      let i = x + dx * dir;
-      let j = y + dy * dir;
-      while (i >= 0 && i < size && j >= 0 && j < size && board[i][j] === player) {
-        count++;
-        i += dx * dir;
-        j += dy * dir;
+        ctx.beginPath();
+        ctx.moveTo(offset + i * gridSize, offset);
+        ctx.lineTo(offset + i * gridSize, canvas.height - offset);
+        ctx.stroke();
       }
     }
-    if (count >= 5) return true;
-  }
-  return false;
-}
 
-// 人类下子
-canvas.addEventListener("click", (e) => {
-  if (gameOver) return;
-  const rect = canvas.getBoundingClientRect();
-  const x = Math.round((e.clientX - rect.left - gridSize / 2) / gridSize);
-  const y = Math.round((e.clientY - rect.top - gridSize / 2) / gridSize);
-  if (x < 0 || x >= size || y < 0 || y >= size || board[x][y]) return;
+    function drawPiece(x, y, player) {
+      ctx.beginPath();
+      ctx.font = "20px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = player === HUMAN ? "#000" : "#d00";
+      ctx.fillText(player, x * gridSize + gridSize / 2, y * gridSize + gridSize / 2);
+    }
 
-  board[x][y] = HUMAN;
-  drawPiece(x, y, HUMAN);
+    function placePiece(x, y, player) {
+      if (board[x][y] || gameOver) return;
+      board[x][y] = player;
+      history.push({ x, y, player });
+      drawPiece(x, y, player);
 
-  if (checkWin(x, y, HUMAN)) {
-    setTimeout(() => alert("你赢了！"), 100);
-    gameOver = true;
-    return;
-  }
+      if (checkWin(x, y, player)) {
+        gameOver = true;
+        setTimeout(() => alert(`${player} 赢了！`), 100);
+      }
+    }
 
-  setTimeout(aiMove, 200);
-});
+    function canvasClick(e) {
+      if (gameOver || replayTimer) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / gridSize);
+      const y = Math.floor((e.clientY - rect.top) / gridSize);
+      if (x >= 0 && x < size && y >= 0 && y < size && !board[x][y]) {
+        placePiece(x, y, HUMAN);
+        if (!gameOver) setTimeout(aiMove, 300);
+      }
+    }
 
-// AI落子策略
-function aiMove() {
-  if (gameOver) return;
+    canvas.addEventListener("click", canvasClick);
 
-  let best = null, maxScore = -Infinity;
+    function aiMove() {
+      let best = null, maxScore = -Infinity;
 
-  for (let x = 0; x < size; x++) {
-    for (let y = 0; y < size; y++) {
-      if (!board[x][y]) {
-        // 模拟防守
-        board[x][y] = HUMAN;
-        let blockScore = evaluate(HUMAN, x, y);
-        board[x][y] = null;
-
-        // 模拟进攻
-        board[x][y] = AI;
-        let attackScore = evaluate(AI, x, y);
-        board[x][y] = null;
-
-        // 策略：先防对面活四/活三，再考虑自己进攻
-        let score = Math.max(blockScore * 1.5, attackScore);
-        if (score > maxScore) {
-          maxScore = score;
-          best = [x, y];
+      for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+          if (!board[x][y]) {
+            let myScore = getScore(x, y, AI);
+            let oppScore = getScore(x, y, HUMAN) * 1.4;
+            let score = myScore + oppScore;
+            if (score > maxScore) {
+              maxScore = score;
+              best = { x, y };
+            }
+          }
         }
       }
+
+      if (best) placePiece(best.x, best.y, AI);
     }
-  }
 
-  if (best) {
-    const [x, y] = best;
-    board[x][y] = AI;
-    drawPiece(x, y, AI);
-    if (checkWin(x, y, AI)) {
-      setTimeout(() => alert("AI 获胜！"), 100);
-      gameOver = true;
+    function getScore(x, y, player) {
+      const lines = [[1,0],[0,1],[1,1],[1,-1]];
+      let score = 0;
+
+      for (const [dx, dy] of lines) {
+        let count = 1, block = 0;
+
+        for (let dir = -1; dir <= 1; dir += 2) {
+          let i = x + dx * dir;
+          let j = y + dy * dir;
+          while (
+            i >= 0 && i < size &&
+            j >= 0 && j < size
+          ) {
+            if (board[i][j] === player) {
+              count++;
+            } else if (board[i][j] !== null) {
+              block++;
+              break;
+            } else break;
+            i += dx * dir;
+            j += dy * dir;
+          }
+        }
+
+        if (count >= 5) score += 10000;
+        else if (count === 4 && block === 0) score += 5000;
+        else if (count === 4) score += 1000;
+        else if (count === 3 && block === 0) score += 800;
+        else if (count === 3) score += 300;
+        else if (count === 2) score += 100;
+      }
+
+      return score;
     }
-  }
-}
 
-// 简单评估函数（统计某方向最大连子数）
-function evaluate(player, x, y) {
-  const directions = [[1,0],[0,1],[1,1],[1,-1]];
-  let max = 0;
+    function checkWin(x, y, player) {
+      const directions = [[1,0],[0,1],[1,1],[1,-1]];
+      for (let [dx, dy] of directions) {
+        let count = 1;
+        for (let dir = -1; dir <= 1; dir += 2) {
+          let i = x + dx * dir;
+          let j = y + dy * dir;
+          while (
+            i >= 0 && i < size &&
+            j >= 0 && j < size &&
+            board[i][j] === player
+          ) {
+            count++;
+            i += dx * dir;
+            j += dy * dir;
+          }
+        }
+        if (count >= 5) return true;
+      }
+      return false;
+    }
 
-  for (let [dx, dy] of directions) {
-    let count = 1;
-    for (let dir = -1; dir <= 1; dir += 2) {
-      let i = x + dx * dir;
-      let j = y + dy * dir;
-      while (
-        i >= 0 && i < size &&
-        j >= 0 && j < size &&
-        board[i][j] === player
-      ) {
-        count++;
-        i += dx * dir;
-        j += dy * dir;
+    function startReplay() {
+      if (replayTimer || history.length === 0) return;
+
+      resetBoardOnly();
+      replayTimer = setInterval(() => {
+        if (replayIndex >= history.length) {
+          clearInterval(replayTimer);
+          replayTimer = null;
+          replayIndex = 0;
+          return;
+        }
+        const step = history[replayIndex++];
+        board[step.x][step.y] = step.player;
+        drawPiece(step.x, step.y, step.player);
+      }, 500);
+    }
+
+    function stopReplay() {
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
       }
     }
-    max = Math.max(max, count);
-  }
 
-  return max;
-}
+    function resetBoardOnly() {
+      board = Array.from({ length: size }, () => Array(size).fill(null));
+      drawBoard();
+    }
 
-drawBoard();
+    function resetGame() {
+      stopReplay();
+      gameOver = false;
+      replayIndex = 0;
+      history = [];
+      resetBoardOnly();
+      setTimeout(aiMove, 200); // AI 先手
+    }
 
-// AI先手
-aiMove();
-</script>
+    // 初始化
+    drawBoard();
+    setTimeout(aiMove, 200); // AI 先手
+  </script>
+</section>
 
   <section id="contact">
     <details>
