@@ -506,6 +506,97 @@
   </details>
 </section>
 
+  <section id="games">
+  <details>
+    <summary>五子棋</summary>
+    <div class="link-buttons">
+      <canvas id="gobang" width="600" height="600" style="border:1px solid #ccc;"></canvas>
+    </div>
+  </details>
+</section>
+
+<script>
+  const canvas = document.getElementById("gobang");
+  const ctx = canvas.getContext("2d");
+  const size = 32; // 棋盘15x15
+  const gridSize = canvas.width / size;
+  const board = Array.from({ length: size }, () => Array(size).fill(null));
+  let currentPlayer = "O";
+  let gameOver = false;
+
+  // 画棋盘
+  function drawBoard() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#333";
+    for (let i = 0; i < size; i++) {
+      ctx.beginPath();
+      ctx.moveTo(gridSize / 2, gridSize / 2 + i * gridSize);
+      ctx.lineTo(canvas.width - gridSize / 2, gridSize / 2 + i * gridSize);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(gridSize / 2 + i * gridSize, gridSize / 2);
+      ctx.lineTo(gridSize / 2 + i * gridSize, canvas.height - gridSize / 2);
+      ctx.stroke();
+    }
+  }
+
+  // 检查是否胜利
+  function checkWin(x, y, player) {
+    const directions = [
+      [1, 0], [0, 1], [1, 1], [1, -1] // 横、竖、斜、反斜
+    ];
+    for (const [dx, dy] of directions) {
+      let count = 1;
+      for (let dir = -1; dir <= 1; dir += 2) {
+        let i = x + dx * dir;
+        let j = y + dy * dir;
+        while (i >= 0 && i < size && j >= 0 && j < size && board[i][j] === player) {
+          count++;
+          i += dx * dir;
+          j += dy * dir;
+        }
+      }
+      if (count >= 5) return true;
+    }
+    return false;
+  }
+
+  // 落子
+  canvas.addEventListener("click", (e) => {
+    if (gameOver) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round((e.clientX - rect.left - gridSize / 2) / gridSize);
+    const y = Math.round((e.clientY - rect.top - gridSize / 2) / gridSize);
+    if (x < 0 || x >= size || y < 0 || y >= size || board[x][y]) return;
+
+    board[x][y] = currentPlayer;
+    drawPiece(x, y, currentPlayer);
+
+    if (checkWin(x, y, currentPlayer)) {
+      setTimeout(() => {
+        alert(`${currentPlayer} 获胜！`);
+        gameOver = true;
+      }, 100);
+      return;
+    }
+
+    currentPlayer = currentPlayer === "O" ? "X" : "O";
+  });
+
+  // 画棋子
+  function drawPiece(x, y, player) {
+    ctx.beginPath();
+    ctx.font = "20px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = player === "O" ? "#000" : "#d00";
+    ctx.fillText(player, x * gridSize + gridSize / 2, y * gridSize + gridSize / 2);
+  }
+
+  drawBoard();
+</script>
+
   <section id="contact">
     <details>
       <summary>联系我们</summary>
