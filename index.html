@@ -613,7 +613,7 @@
   <script>
     const canvas = document.getElementById("gobang");
     const ctx = canvas.getContext("2d");
-    const size = 15;
+    const size = 32;
     const gridSize = canvas.width / size;
     let board = Array.from({ length: size }, () => Array(size).fill(null));
     let gameOver = false;
