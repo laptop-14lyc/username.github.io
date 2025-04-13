@@ -759,43 +759,43 @@
   </script>
 </section>
 
- <section id="games">
+  <section id="games">
   <details>
     <summary>五子棋（原版）</summary>
     <div class="link-buttons">
-      <canvas id="gobang" width="600" height="600" style="border:1px solid #ccc;"></canvas>
+      <canvas id="gobang-original" width="600" height="600" style="border:1px solid #ccc;"></canvas>
     </div>
   </details>
 </section>
 
 <script>
-  const canvas = document.getElementById("gobang");
-  const ctx = canvas.getContext("2d");
-  const size = 32; // 棋盘15x15
-  const gridSize = canvas.width / size;
-  const board = Array.from({ length: size }, () => Array(size).fill(null));
-  let currentPlayer = "O";
-  let gameOver = false;
+  const canvasOriginal = document.getElementById("gobang-original");
+  const ctxOriginal = canvasOriginal.getContext("2d");
+  const sizeOriginal = 15; // 棋盘15x15
+  const gridSizeOriginal = canvasOriginal.width / sizeOriginal;
+  const boardOriginal = Array.from({ length: sizeOriginal }, () => Array(sizeOriginal).fill(null));
+  let currentPlayerOriginal = "O";
+  let gameOverOriginal = false;
 
   // 画棋盘
-  function drawBoard() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "#333";
-    for (let i = 0; i < size; i++) {
-      ctx.beginPath();
-      ctx.moveTo(gridSize / 2, gridSize / 2 + i * gridSize);
-      ctx.lineTo(canvas.width - gridSize / 2, gridSize / 2 + i * gridSize);
-      ctx.stroke();
+  function drawBoardOriginal() {
+    ctxOriginal.clearRect(0, 0, canvasOriginal.width, canvasOriginal.height);
+    ctxOriginal.strokeStyle = "#333";
+    for (let i = 0; i < sizeOriginal; i++) {
+      ctxOriginal.beginPath();
+      ctxOriginal.moveTo(gridSizeOriginal / 2, gridSizeOriginal / 2 + i * gridSizeOriginal);
+      ctxOriginal.lineTo(canvasOriginal.width - gridSizeOriginal / 2, gridSizeOriginal / 2 + i * gridSizeOriginal);
+      ctxOriginal.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(gridSize / 2 + i * gridSize, gridSize / 2);
-      ctx.lineTo(gridSize / 2 + i * gridSize, canvas.height - gridSize / 2);
-      ctx.stroke();
+      ctxOriginal.beginPath();
+      ctxOriginal.moveTo(gridSizeOriginal / 2 + i * gridSizeOriginal, gridSizeOriginal / 2);
+      ctxOriginal.lineTo(gridSizeOriginal / 2 + i * gridSizeOriginal, canvasOriginal.height - gridSizeOriginal / 2);
+      ctxOriginal.stroke();
     }
   }
 
   // 检查是否胜利
-  function checkWin(x, y, player) {
+  function checkWinOriginal(x, y, player) {
     const directions = [
       [1, 0], [0, 1], [1, 1], [1, -1] // 横、竖、斜、反斜
     ];
@@ -804,7 +804,7 @@
       for (let dir = -1; dir <= 1; dir += 2) {
         let i = x + dx * dir;
         let j = y + dy * dir;
-        while (i >= 0 && i < size && j >= 0 && j < size && board[i][j] === player) {
+        while (i >= 0 && i < sizeOriginal && j >= 0 && j < sizeOriginal && boardOriginal[i][j] === player) {
           count++;
           i += dx * dir;
           j += dy * dir;
@@ -816,38 +816,38 @@
   }
 
   // 落子
-  canvas.addEventListener("click", (e) => {
-    if (gameOver) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.round((e.clientX - rect.left - gridSize / 2) / gridSize);
-    const y = Math.round((e.clientY - rect.top - gridSize / 2) / gridSize);
-    if (x < 0 || x >= size || y < 0 || y >= size || board[x][y]) return;
+  canvasOriginal.addEventListener("click", (e) => {
+    if (gameOverOriginal) return;
+    const rect = canvasOriginal.getBoundingClientRect();
+    const x = Math.round((e.clientX - rect.left - gridSizeOriginal / 2) / gridSizeOriginal);
+    const y = Math.round((e.clientY - rect.top - gridSizeOriginal / 2) / gridSizeOriginal);
+    if (x < 0 || x >= sizeOriginal || y < 0 || y >= sizeOriginal || boardOriginal[x][y]) return;
 
-    board[x][y] = currentPlayer;
-    drawPiece(x, y, currentPlayer);
+    boardOriginal[x][y] = currentPlayerOriginal;
+    drawPieceOriginal(x, y, currentPlayerOriginal);
 
-    if (checkWin(x, y, currentPlayer)) {
+    if (checkWinOriginal(x, y, currentPlayerOriginal)) {
       setTimeout(() => {
-        alert(`${currentPlayer} 获胜！`);
-        gameOver = true;
+        alert(`${currentPlayerOriginal} 获胜！`);
+        gameOverOriginal = true;
       }, 100);
       return;
     }
 
-    currentPlayer = currentPlayer === "O" ? "X" : "O";
+    currentPlayerOriginal = currentPlayerOriginal === "O" ? "X" : "O";
   });
 
   // 画棋子
-  function drawPiece(x, y, player) {
-    ctx.beginPath();
-    ctx.font = "20px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = player === "O" ? "#000" : "#d00";
-    ctx.fillText(player, x * gridSize + gridSize / 2, y * gridSize + gridSize / 2);
+  function drawPieceOriginal(x, y, player) {
+    ctxOriginal.beginPath();
+    ctxOriginal.font = "20px sans-serif";
+    ctxOriginal.textAlign = "center";
+    ctxOriginal.textBaseline = "middle";
+    ctxOriginal.fillStyle = player === "O" ? "#000" : "#d00";
+    ctxOriginal.fillText(player, x * gridSizeOriginal + gridSizeOriginal / 2, y * gridSizeOriginal + gridSizeOriginal / 2);
   }
 
-  drawBoard();
+  drawBoardOriginal();
 </script>
   
   <section id="contact">
