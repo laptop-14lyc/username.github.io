@@ -597,6 +597,187 @@
   drawBoard();
 </script>
 
+  <section id="games">
+  <details open>
+    <summary>五子棋（AI模式）</summary>
+<p>ps:我鸡哥4060提供的算力，牛不牛逼</p>
+    <div class="link-buttons">
+      <canvas id="gobang" width="600" height="600" style="border:1px solid #ccc;"></canvas>
+      <br>
+      <button onclick="startReplay()">回放棋谱</button>
+      <button onclick="stopReplay()">暂停回放</button>
+      <button onclick="resetGame()">重开一局</button>
+    </div>
+  </details>
+
+  <script>
+    const canvas = document.getElementById("gobang");
+    const ctx = canvas.getContext("2d");
+    const size = 15;
+    const gridSize = canvas.width / size;
+    let board = Array.from({ length: size }, () => Array(size).fill(null));
+    let gameOver = false;
+    let replayIndex = 0;
+    let replayTimer = null;
+    let history = [];
+    const HUMAN = "O", AI = "X";
+
+    function drawBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#333";
+      for (let i = 0; i < size; i++) {
+        ctx.beginPath();
+        ctx.moveTo(gridSize / 2, gridSize / 2 + i * gridSize);
+        ctx.lineTo(canvas.width - gridSize / 2, gridSize / 2 + i * gridSize);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(gridSize / 2 + i * gridSize, gridSize / 2);
+        ctx.lineTo(gridSize / 2 + i * gridSize, canvas.height - gridSize / 2);
+        ctx.stroke();
+      }
+    }
+
+    function drawPiece(x, y, player) {
+      ctx.beginPath();
+      ctx.font = "20px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = player === HUMAN ? "#000" : "#d00";
+      ctx.fillText(player, x * gridSize + gridSize / 2, y * gridSize + gridSize / 2);
+    }
+
+    function placePiece(x, y, player) {
+      board[x][y] = player;
+      history.push({ x, y, player });
+      drawPiece(x, y, player);
+      if (checkWin(x, y, player)) {
+        setTimeout(() => alert(`${player} 赢了！`), 100);
+        gameOver = true;
+      }
+    }
+
+    canvas.addEventListener("click", (e) => {
+      if (gameOver || replayTimer) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round((e.clientX - rect.left - gridSize / 2) / gridSize);
+      const y = Math.round((e.clientY - rect.top - gridSize / 2) / gridSize);
+      if (x < 0 || x >= size || y < 0 || y >= size || board[x][y]) return;
+
+      placePiece(x, y, HUMAN);
+      if (!gameOver) setTimeout(aiMove, 200);
+    });
+
+    function aiMove() {
+      let best = null, maxScore = -Infinity;
+
+      for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+          if (!board[x][y]) {
+            let score = getScore(x, y, AI) + getScore(x, y, HUMAN) * 1.4;
+            if (score > maxScore) {
+              maxScore = score;
+              best = { x, y };
+            }
+          }
+        }
+      }
+
+      if (best) placePiece(best.x, best.y, AI);
+    }
+
+    function getScore(x, y, player) {
+      const lines = [[1, 0], [0, 1], [1, 1], [1, -1]];
+      let score = 0;
+
+      for (const [dx, dy] of lines) {
+        let count = 1, block = 0;
+
+        for (let dir = -1; dir <= 1; dir += 2) {
+          let i = x + dx * dir;
+          let j = y + dy * dir;
+          while (i >= 0 && i < size && j >= 0 && j < size) {
+            if (board[i][j] === player) {
+              count++;
+            } else if (board[i][j] !== null) {
+              block++;
+              break;
+            } else break;
+            i += dx * dir;
+            j += dy * dir;
+          }
+        }
+
+        if (count >= 5) score += 10000;
+        else if (count === 4 && block === 0) score += 5000;
+        else if (count === 4 && block === 1) score += 1000;
+        else if (count === 3 && block === 0) score += 800;
+        else if (count === 3) score += 300;
+        else if (count === 2) score += 100;
+      }
+
+      return score;
+    }
+
+    function checkWin(x, y, player) {
+      const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
+      for (let [dx, dy] of directions) {
+        let count = 1;
+        for (let dir = -1; dir <= 1; dir += 2) {
+          let i = x + dx * dir, j = y + dy * dir;
+          while (i >= 0 && i < size && j >= 0 && j < size && board[i][j] === player) {
+            count++;
+            i += dx * dir;
+            j += dy * dir;
+          }
+        }
+        if (count >= 5) return true;
+      }
+      return false;
+    }
+
+    function startReplay() {
+      if (replayTimer || history.length === 0) return;
+      resetBoardOnly();
+      replayTimer = setInterval(() => {
+        if (replayIndex >= history.length) {
+          clearInterval(replayTimer);
+          replayTimer = null;
+          replayIndex = 0;
+          return;
+        }
+        const step = history[replayIndex++];
+        board[step.x][step.y] = step.player;
+        drawPiece(step.x, step.y, step.player);
+      }, 500);
+    }
+
+    function stopReplay() {
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
+      }
+    }
+
+    function resetGame() {
+      stopReplay();
+      board = Array.from({ length: size }, () => Array(size).fill(null));
+      history = [];
+      gameOver = false;
+      replayIndex = 0;
+      drawBoard();
+      setTimeout(aiMove, 200);
+    }
+
+    function resetBoardOnly() {
+      board = Array.from({ length: size }, () => Array(size).fill(null));
+      drawBoard();
+    }
+
+    drawBoard();
+    setTimeout(aiMove, 200); // AI 先手
+  </script>
+</section>
+
   <section id="contact">
     <details>
       <summary>联系我们</summary>
