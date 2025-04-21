@@ -286,6 +286,38 @@
     function backToTop() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    .dragon-rainbow {
+  background: linear-gradient(270deg, #ff0000, #ff8c00, #ffff00, #00ff00, #00ced1, #1e90ff, #8a2be2, #ff0000);
+  background-size: 1600% 1600%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbowFlow 6s linear infinite;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255,255,255,0.2);
+}
+
+@keyframes rainbowFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+.fade-in {
+  opacity: 0;
+  animation: fadeInEffect 2s ease-in-out forwards;
+}
+
+.fade-in.delay {
+  animation-delay: 1.5s; /* 第二段晚点浮现 */
+}
+
+@keyframes fadeInEffect {
+  to {
+    opacity: 1;
+  }
+}
   </script>
 </head>
 <body>
@@ -344,9 +376,9 @@
       李宇宸
       <span class="wing-right">༃ༀད༻</span>
     </h3>
-    <p class="bio">神秘而强大，智勇双全的灵魂人物。</p>
+    <p class="bio dragon-rainbow fade-in">神秘而强大，智勇双全的灵魂人物。</p>
 <p>传说中的高手。技术与领导力兼备，是高二九班中的传说。</p>
-    <p class="life">生平:2023年期中历史年纪前4【93分】，2024年高一下地理期末区统考年级第一【82分】，2025年高二上区统考语文年级前三【97分】</p>
+    <p class="life dragon-rainbow fade-in delay">生平:2023年期中历史年纪前4【93分】，2024年高一下地理期末区统考年级第一【82分】，2025年高二上区统考语文年级前三【97分】</p>
     <div class="honor dragon-glow">🐉 网站维护者</div>
   </div>
 </div>
