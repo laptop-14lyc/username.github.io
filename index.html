@@ -239,6 +239,7 @@
     <h1>我的主页</h1>
     <nav>
       <a href="#home">主页</a>
+      <a href="#vip">荣誉墙</a>
       <a href="#study">学习资源</a>
       <a href="#share">资源分享</a>
       <a href="#shiji">史记</a>
@@ -255,6 +256,108 @@
       <p class="typing-text">Hello! everyone  ✧*｡٩(ˊᗜˋ*)و✧*｡</p>
     </details>
   </section>
+  
+<section id="vip">
+  <h2 style="text-align:center; font-size:2rem; margin-bottom:1rem;">班级荣誉墙</h2>
+  <div class="profile-container">
+    
+    <div class="profile-card">
+      <img src="头像.jpg" alt="zhx的头像" class="avatar">
+      <div class="profile-content">
+        <h3>张浩轩</h3>
+        <p class="bio">一位热爱第五人格和COC的九班副班，常年霸榜校内文综考试。</p>
+        <p class="life">生平：2023年加入班级，2023年斩获高一九班副班长职务，2024年成为团员。</p>
+        <div class="honor">🏅<span>团员</span></div>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <img src="头像B.jpg" alt="B的头像" class="avatar">
+      <div class="profile-content">
+        <h3>B同学</h3>
+        <p class="bio">班级文艺担当，舞台上的光芒万丈，生活中的温柔细腻。</p>
+        <p class="life">生平：才艺多面手，连续三年主持校晚会，多次获得文艺之星称号。</p>
+        <div class="honor">🏅<span>团员</span></div>
+      </div>
+    </div>
+
+    <!-- 可以继续加 C、D、E 等人 -->
+
+  </div>
+</section>
+
+<style>
+#vip {
+  padding: 2rem;
+  background: #f9f9f9;
+  font-family: 'Arial', sans-serif;
+}
+
+.profile-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  width: 300px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.profile-card:hover {
+  transform: translateY(-10px);
+}
+
+.avatar {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.profile-content {
+  padding: 1rem;
+}
+
+.profile-content h3 {
+  margin-top: 0.5rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.bio {
+  font-style: italic;
+  color: #666;
+}
+
+.life {
+  margin-top: 0.5rem;
+  color: #444;
+}
+
+.honor {
+  margin-top: 1rem;
+  background: linear-gradient(90deg, #ff4d4d, #ff9900, #ffff00);
+  padding: 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+  box-shadow: 0 0 10px gold;
+  letter-spacing: 2px;
+}
+
+.honor span {
+  font-size: 1.5rem;
+  font-family: "Impact", sans-serif;
+}
+</style>
 
   <section id="study">
     <details>
