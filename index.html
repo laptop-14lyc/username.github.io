@@ -413,7 +413,7 @@
   </script>
 </head>
 <body>
-<!-- 页面内容保持不变 -->
+<!-- 页面内容不变 -->
 <button id="backToTop" onclick="backToTop()">↑</button>
   </style>
 </head>
@@ -448,6 +448,18 @@
   </section>
   
     <script>
+  // Store the current scroll position
+  const scrollY = window.scrollY || document.documentElement.scrollTop;
+
+  // Lock the scroll by fixing the body's position
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.overflow = 'hidden';
+</script>
+
+  <script>
     // 创建遮罩层
     const overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay';
@@ -461,17 +473,23 @@
     document.body.appendChild(overlay);
 
     // 点击“访问”后移除遮罩层并允许滚动
-    overlay.querySelector('.secret-trigger').addEventListener('click', () => {
-      document.body.removeChild(overlay);
-      document.body.classList.remove('no-scroll');
-    });
+   overlay.querySelector('.secret-trigger').addEventListener('click', () => {
+  // Remove the overlay
+  document.body.removeChild(overlay);
 
-    // 禁用其他关闭方式
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' || e.ctrlKey || e.metaKey) e.preventDefault();
-    });
-    overlay.addEventListener('click', (e) => e.preventDefault());
-    document.addEventListener('contextmenu', e => e.preventDefault());
+  // Retrieve the stored scroll position
+  const scrollY = document.body.style.top;
+  
+  // Remove the fixed positioning and other styles
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
+
+  // Restore the scroll position
+  window.scrollTo(0, parseInt(scrollY || '0') * -1);
+});
   </script>
   
 <section id="vip">
