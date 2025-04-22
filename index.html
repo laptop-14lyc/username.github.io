@@ -328,53 +328,71 @@
     left: 0;
     color: transparent;
 }
-      .fullscreen-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ff4444;
-            font-family: 'Courier New', monospace;
-            cursor: default;
-        }
+     .fullscreen-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0,0,0,0.95) !important;
+    z-index: 2147483647 !important; /* 最大可能值 */
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Courier New', monospace !important;
+}
 
-        .warning-text {
-            font-size: 24px;
-            text-align: center;
-            line-height: 1.5;
-        }
+.warning-text {
+    font-size: 2rem !important;
+    color: #ff4444 !important;
+    text-align: center;
+    padding: 20px;
+    border: 3px solid red;
+    background: rgba(0,0,0,0.8);
+}
 
-        /* 隐藏的可点击文本样式 */
-        .secret-trigger {
-            color: inherit; /* 保持与上下文一致 */
-            text-decoration: none;
-            cursor: pointer;
-            position: relative;
-        }
+.secret-trigger {
+    color: #00ffd5 !important;
+    cursor: pointer;
+    text-decoration: underline;
+    animation: blink 1s infinite;
+}
 
-        /* 微妙的悬停效果 */
-        .secret-trigger:hover {
-            text-decoration: underline dotted;
-            text-underline-offset: 2px;
-        }
-
-        /* 禁用所有交互 */
-        body {
-            margin: 0;
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-    
+@keyframes blink {
+    50% { opacity: 0.5; }
+}    
   </script>
 </head>
 <body>
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 创建锁屏层
+    const overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay';
+    overlay.innerHTML = `
+        <div class="warning-text">
+            ⚠️ 警告！该页面已停止维护<br>
+            <span style="font-size: 1.2rem">(点击 <span class="secret-trigger" onclick="unlock()">此处</span> 进入风险自担)</span>
+        </div>
+    `;
+
+    // 优先插入到页面最顶部
+    document.body.prepend(overlay);
+    document.documentElement.style.overflow = 'hidden';
+
+    // 强制锁定页面
+    window.addEventListener('scroll', e => e.preventDefault(), { passive: false });
+    window.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+});
+
+function unlock() {
+    const overlay = document.querySelector('.fullscreen-overlay');
+    if(overlay) {
+        overlay.style.display = 'none';
+        document.documentElement.style.overflow = 'auto';
+    }
+}
+</script>
 <!-- 页面内容保持不变 -->
 <button id="backToTop" onclick="backToTop()">↑</button>
   </style>
