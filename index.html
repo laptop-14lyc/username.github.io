@@ -361,6 +361,61 @@
 @keyframes blink {
     50% { opacity: 0.5; }
 }    
+    // 在脚本开始处定义具名函数
+let isLocked = false;
+const preventScroll = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 创建弹窗（原有代码）
+    // ...
+
+    // 锁定滚动时
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    
+    // 添加事件监听器
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('keydown', (e) => {
+        if ([32, 33, 34, 35, 36, 38, 40].includes(e.keyCode)) { // 空格/翻页/方向键
+            preventScroll(e);
+        }
+    });
+    isLocked = true;
+});
+
+// 解锁函数修改
+function unlock() {
+    if (!isLocked) return;
+    
+    // 移除事件监听器
+    window.removeEventListener('wheel', preventScroll);
+    window.removeEventListener('touchmove', preventScroll);
+    
+    // 恢复滚动样式
+    document.documentElement.style.overflow = 'auto';
+    document.body.style.overflow = 'auto';
+    
+    // 强制重绘
+    document.body.style.display = 'none';
+    document.body.offsetHeight; // 触发重绘
+    document.body.style.display = 'block';
+    
+    isLocked = false;
+    
+    // 重置滚动位置
+    window.scrollTo(0, 0);
+    
+    // 兼容iOS Safari
+    if (/(iPad|iPhone|iPod)/g.test(navigator.userAgent)) {
+        document.body.style.position = 'relative';
+        document.body.style.height = '100vh';
+    }
+}
   </script>
 </head>
 <body>
