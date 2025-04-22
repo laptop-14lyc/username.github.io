@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>我的主页</title>
   <style>
-    /* —— 背景与全局 —— */
     body {
       font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background: url('https://images.pexels.com/photos/620337/pexels-photo-620337.jpeg') no-repeat center center fixed;
+      margin: 0;
+      padding: 0;
+      background: url('https://images.pexels.com/photos/620337/pexels-photo-620337.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1') no-repeat center center fixed;
       background-size: cover;
       color: white;
       overflow-x: hidden;
@@ -18,47 +18,110 @@
       background-color: rgba(0, 0, 0, 0.7);
       padding: 15px;
       position: fixed;
-      top: 0; left: 25%;
+      top: 0;
       width: 50%;
       z-index: 999;
       transition: background-color 0.3s, box-shadow 0.3s;
+      left: 25%;
     }
     header.scrolled {
       background-color: rgba(0, 0, 0, 0.9);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
     }
     nav a {
-      color: white; margin: 0 15px; text-decoration: none;
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
       transition: color 0.3s ease;
     }
-    nav a:hover { color: #00ffd5; }
-
+    nav a:hover {
+      color: #00ffd5;
+    }
     section {
       padding: 60px 20px;
       background-color: rgba(0, 0, 0, 0.6);
-      margin: 100px 20px 20px;
+      margin: 100px 20px 20px 20px;
       border-radius: 10px;
       animation: fadeInUp 1s ease;
     }
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
+      to { opacity: 1; transform: translateY(0); }
     }
-
-    /* 回到顶部按钮 */
-    #backToTop {
-      position: fixed; bottom: 20px; right: 20px;
-      background: #00bcd4; color: white;
-      border: none; padding: 10px; border-radius: 50%;
-      font-size: 18px; cursor: pointer;
-      z-index: 999; display: none;
+    .chapter-list { float: left; width: 20%; max-height: 600px; overflow-y: scroll; }
+    .chapter-content { float: left; width: 75%; margin-left: 5%; }
+    .chapter { margin-bottom: 20px; }
+    footer {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.7);
     }
-
-    /* 粒子特效（可选） */
-    .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+    .link-buttons a {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 15px;
+      background: #00bcd4;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .link-buttons a:hover {
+      transform: scale(1.1);
+      background: #0097a7;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    a {
+      color: #80deea;
+    }
+    details summary {
+      cursor: pointer;
+      font-size: 1.2em;
+      font-weight: bold;
+      border: 2px solid #00bcd4;
+      padding: 10px;
+      border-radius: 5px;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    details summary:hover {
+      background-color: #00bcd4;
+      border-color: #0097a7;
+    }
+    .typing-text {
+      font-size: 2em;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 0.15em solid #00ffd5;
+      animation: typing 4s steps(40) 1s forwards, blink 0.75s step-end infinite;
+    }
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
     .particle {
-      position: absolute; border-radius: 50%;
-      background: rgba(255,255,255,0.7); opacity: 0;
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.7);
+      opacity: 0;
       animation: particleAnimation 2s linear infinite;
     }
     @keyframes particleAnimation {
@@ -66,39 +129,262 @@
       100% { opacity: 0; transform: translateY(-100vh) scale(0); }
     }
 
-    /* —— 锁屏弹窗 —— */
-    .fullscreen-overlay {
-      position: fixed; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.95);
-      z-index: 9999;
-      display: flex; justify-content: center; align-items: center;
-      font-family: 'Courier New', monospace;
+    /* 密码遮罩样式 */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
     }
-    .warning-text {
-      font-size: 2rem; color: #ff4444;
-      text-align: center; padding: 20px;
-      border: 3px solid red;
-      background: rgba(0,0,0,0.8);
+    .password-box {
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
     }
+    .password-box input {
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .password-box button {
+      padding: 10px;
+      margin-top: 10px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .password-box button:hover {
+      background: #0097a7;
+    }
+    .error-msg {
+      color: red;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* 只为圣经和史记启用 relative 定位 */
+    section#shiji,
+    section#sj {
+      position: relative;
+    }
+    section#shiji,
+    section#sj {
+      position: relative;
+    }
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column;
+        align-items: center;
+      }
+      .chapter-list, .chapter-content {
+        width: 100%;
+        float: none;
+        margin-left: 0;
+      }
+    }
+    /* 回到顶部按钮 */
+    #backToTop {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 999;
+      display: none;
+    }
+    .profile-card.dragon {
+  position: relative;
+  background: radial-gradient(circle, #1a1a1a, #000);
+  border: 2px solid gold;
+  box-shadow: 0 0 25px gold;
+  background-image: url('https://github.com/laptop-14lyc/username.github.io/blob/main/tb.1.fd56f528-modified-removebg-preview.png?raw=true'); /* 龙图背景 可替换成更酷的 */
+  background-size: cover;
+  color: white;
+  animation: pulseGlow 4s infinite ease-in-out;
+}
+
+.with-wings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-shadow: 0 0 8px gold;
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.wing-left, .wing-right {
+  font-size: 1.5rem;
+  animation: flap 2s infinite ease-in-out;
+}
+
+.wing-left {
+  margin-right: 0.5rem;
+  transform-origin: right center;
+}
+
+.wing-right {
+  margin-left: 0.5rem;
+  transform-origin: left center;
+}
+
+@keyframes flap {
+  0%, 100% { transform: scaleY(1) rotate(0deg); }
+  50% { transform: scaleY(1.2) rotate(10deg); }
+}
+
+.dragon-glow {
+  margin-top: 1rem;
+  padding: 0.6rem;
+  background: linear-gradient(to right, #ffcc00, #ff3300);
+  border-radius: 15px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: #fff;
+  text-shadow: 0 0 5px #000;
+  box-shadow: 0 0 15px 5px red;
+  letter-spacing: 3px;
+  animation: flicker 1.5s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; box-shadow: 0 0 15px 5px red; }
+  50% { opacity: 0.7; box-shadow: 0 0 25px 10px orange; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 25px gold; }
+  50% { box-shadow: 0 0 40px red; }
+}
+  </style>
+  <script>
+    window.addEventListener('scroll', function() {
+      const header = document.getElementById('header');
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+        document.getElementById('backToTop').style.display = 'block';
+      } else {
+        header.classList.remove('scrolled');
+        document.getElementById('backToTop').style.display = 'none';
+      }
+    });
+
+    function backToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    .dragon-rainbow {
+  background: linear-gradient(270deg, #ff0000, #ff8c00, #ffff00, #00ff00, #00ced1, #1e90ff, #8a2be2, #ff0000);
+  background-size: 1600% 1600%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbowFlow 6s linear infinite;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255,255,255,0.2);
+}
+
+@keyframes rainbowFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+.fade-in {
+  opacity: 0;
+  animation: fadeInEffect 2s ease-in-out forwards;
+}
+
+.fade-in.delay {
+  animation-delay: 1.5s; /* 第二段晚点浮现 */
+}
+
+@keyframes fadeInEffect {
+  to {
+    opacity: 1;
+  }
+}
     .secret-trigger {
-      color: #00ffd5; cursor: pointer;
-      text-decoration: underline;
-      margin-left: 0.5em;
-      animation: blink 1s infinite;
-    }
-    @keyframes blink {
-      50% { opacity: 0.5; }
-    }
+    pointer-events: none; /* 先禁用所有指针事件 */
+}
+.secret-trigger::after {
+    content: "访问";
+    pointer-events: auto; /* 仅在伪元素上启用事件 */
+    position: absolute;
+    left: 0;
+    color: transparent;
+}
+      .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ff4444;
+            font-family: 'Courier New', monospace;
+            cursor: default;
+        }
+
+        .warning-text {
+            font-size: 24px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* 隐藏的可点击文本样式 */
+        .secret-trigger {
+            color: inherit; /* 保持与上下文一致 */
+            text-decoration: none;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* 微妙的悬停效果 */
+        .secret-trigger:hover {
+            text-decoration: underline dotted;
+            text-underline-offset: 2px;
+        }
+
+        /* 禁用所有交互 */
+        body {
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    
+  </script>
+</head>
+<body>
+<!-- 页面内容保持不变 -->
+<button id="backToTop" onclick="backToTop()">↑</button>
   </style>
 </head>
 <body>
-  <!-- 粒子效果示例 -->
   <div class="particles">
-    <div class="particle" style="width:10px; height:10px; left:20%; animation-delay:0.5s;"></div>
-    <div class="particle" style="width:12px; height:12px; left:40%; animation-delay:1s;"></div>
-    <div class="particle" style="width:8px;  height:8px;  left:60%; animation-delay:1.5s;"></div>
-    <div class="particle" style="width:6px;  height:6px;  left:80%; animation-delay:2s;"></div>
+    <div class="particle" style="width: 10px; height: 10px; left: 20%; animation-delay: 0.5s;"></div>
+    <div class="particle" style="width: 12px; height: 12px; left: 40%; animation-delay: 1s;"></div>
+    <div class="particle" style="width: 8px; height: 8px; left: 60%; animation-delay: 1.5s;"></div>
+    <div class="particle" style="width: 6px; height: 6px; left: 80%; animation-delay: 2s;"></div>
   </div>
 
   <header id="header">
@@ -112,7 +398,7 @@
       <a href="#contact">联系我们</a>
       <a href="#sj">圣经</a>
       <a href="#games">小游戏（beta）</a>
-      <a href="#class">全家福</a>
+      <a href="#class">全家福）</a>
     </nav>
   </header>
 
@@ -122,61 +408,33 @@
       <p class="typing-text">Hello! everyone  ✧*｡٩(ˊᗜˋ*)و✧*｡</p>
     </details>
   </section>
-
-  <button id="backToTop" onclick="backToTop()">↑</button>
-
+  
   <script>
-    // 顶部导航滚动 & 回顶部
-    window.addEventListener('scroll', () => {
-      const hdr = document.getElementById('header');
-      const btn  = document.getElementById('backToTop');
-      if (window.scrollY > 50) {
-        hdr.classList.add('scrolled');
-        btn.style.display = 'block';
-      } else {
-        hdr.classList.remove('scrolled');
-        btn.style.display = 'none';
-      }
-    });
-    function backToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // 页面锁屏弹窗
-    document.addEventListener('DOMContentLoaded', () => {
-      const overlay = document.createElement('div');
-      overlay.className = 'fullscreen-overlay';
-      overlay.innerHTML = `
+    // 创建弹窗
+    const overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay';
+    overlay.innerHTML = `
         <div class="warning-text">
-          ⚠️ 该页面已于 3月22日 停止维护和
-          <span class="secret-trigger">访问</span>！ ⚠️
+            ⚠️ 该页面已于 3月22日 停止维护和<span class="secret-trigger">访问</span>！ ⚠️
         </div>
-      `;
-      document.body.appendChild(overlay);
+    `;
 
-      // 锁死滚动/缩放
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      const prevent = e => e.preventDefault();
-      window.addEventListener('wheel',    prevent, { passive: false });
-      window.addEventListener('touchmove',prevent, { passive: false });
-      window.addEventListener('keydown', e => {
-        if ([32,33,34,35,36,38,40].includes(e.keyCode)) e.preventDefault();
-      });
+    // 添加到页面
+    document.body.appendChild(overlay);
 
-      // 点击“访问”——仅隐藏文字，不恢复滚动
-      overlay.querySelector('.secret-trigger').addEventListener('click', () => {
-        overlay.querySelector('.warning-text').style.display = 'none';
-      });
-
-      // 禁用右键、ESC 等绕过方式
-      window.addEventListener('keydown', e => {
-        if (e.key === 'Escape' || e.ctrlKey || e.metaKey) e.preventDefault();
-      });
-      overlay.addEventListener('click', e => e.preventDefault());
-      document.addEventListener('contextmenu', e => e.preventDefault());
+    // 隐藏的关闭机制（只有点击"访问"生效）
+    overlay.querySelector('.secret-trigger').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        document.documentElement.style.overflow = 'auto'; // 恢复滚动条
     });
-  </script>
+
+    // 禁用各种关闭方式
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.ctrlKey || e.metaKey) e.preventDefault();
+    });
+    overlay.addEventListener('click', (e) => e.preventDefault());
+    document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
   
 <section id="vip">
   <h2 style="text-align:center; font-size:2rem; margin-bottom:1rem; color: yellow;">班级荣誉墙</h2>
