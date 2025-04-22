@@ -419,36 +419,6 @@ function unlock() {
   </script>
 </head>
 <body>
-  <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // 创建锁屏层
-    const overlay = document.createElement('div');
-    overlay.className = 'fullscreen-overlay';
-    overlay.innerHTML = `
-        <div class="warning-text">
-            ⚠️ 警告！该页面已停止维护<br>
-            <span style="font-size: 1.2rem">(点击 <span class="secret-trigger" onclick="unlock()">此处</span> 进入风险自担)</span>
-        </div>
-    `;
-
-    // 优先插入到页面最顶部
-    document.body.prepend(overlay);
-    document.documentElement.style.overflow = 'hidden';
-
-    // 强制锁定页面
-    window.addEventListener('scroll', e => e.preventDefault(), { passive: false });
-    window.addEventListener('wheel', e => e.preventDefault(), { passive: false });
-});
-
-function unlock() {
-    const overlay = document.querySelector('.fullscreen-overlay');
-    if(overlay) {
-        overlay.style.display = 'none';
-        document.documentElement.style.overflow = 'auto';
-    }
-}
-</script>
-<!-- 页面内容保持不变 -->
 <button id="backToTop" onclick="backToTop()">↑</button>
   </style>
 </head>
@@ -483,7 +453,8 @@ function unlock() {
   </section>
   
   <script>
-    // 创建弹窗
+document.addEventListener('DOMContentLoaded', () => {
+    // 创建锁屏层（仅保留一个警告弹窗）
     const overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay';
     overlay.innerHTML = `
@@ -492,21 +463,30 @@ function unlock() {
         </div>
     `;
 
-    // 添加到页面
     document.body.appendChild(overlay);
 
-    // 隐藏的关闭机制（只有点击"访问"生效）
-    overlay.querySelector('.secret-trigger').addEventListener('click', () => {
-        document.body.removeChild(overlay);
-        document.documentElement.style.overflow = 'auto'; // 恢复滚动条
+    // 禁止滚动和缩放
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+    window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    window.addEventListener('keydown', (e) => {
+        if ([32, 33, 34, 35, 36, 38, 40].includes(e.keyCode)) e.preventDefault();
     });
 
-    // 禁用各种关闭方式
+    // 点击“访问”后只是隐藏文字，不恢复滚动
+    overlay.querySelector('.secret-trigger').addEventListener('click', (e) => {
+        const warningText = e.target.closest('.warning-text');
+        if (warningText) warningText.style.display = 'none';
+    });
+
+    // 防止右键、ESC等绕过方式
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' || e.ctrlKey || e.metaKey) e.preventDefault();
     });
     overlay.addEventListener('click', (e) => e.preventDefault());
     document.addEventListener('contextmenu', e => e.preventDefault());
+});
 </script>
   
 <section id="vip">
