@@ -510,6 +510,53 @@
   }
 </style>
 
+<style>
+  .announcement-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 80%;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    font-size: 18px;
+    line-height: 1.6;
+    color: #d00; /* 红色文本 */
+  }
+
+  .modal-content .secret-trigger {
+    color: inherit; /* 和文本一样的颜色 */
+    cursor: pointer;
+    font-weight: inherit;
+    transition: opacity 0.3s;
+  }
+
+  .modal-content .secret-trigger:hover {
+    opacity: 0.6;
+  }
+
+  body.modal-open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+  }
+</style>
+
 <script>
   // 保存当前滚动位置并锁定页面
   const scrollY = window.scrollY;
@@ -521,8 +568,7 @@
   modal.className = 'announcement-modal';
   modal.innerHTML = `
     <div class="modal-content">
-      ⚠️ 该页面已于 3月22日 停止维护和
-      <span class="secret-trigger">访问</span>！⚠️
+      ⚠️ 该页面已于 3月22日 停止维护和<span class="secret-trigger">访问</span>！⚠️
     </div>
   `;
 
@@ -534,18 +580,6 @@
     document.body.classList.remove('modal-open');
     window.scrollTo(0, scrollY);
   });
-</script>
-     
-    <script>
-  // Store the current scroll position
-  const scrollY = window.scrollY || document.documentElement.scrollTop;
-
-  // Lock the scroll by fixing the body's position
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${scrollY}px`;
-  document.body.style.left = '0';
-  document.body.style.right = '0';
-  document.body.style.overflow = 'hidden';
 </script>
      
 <section id="vip">
