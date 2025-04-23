@@ -468,48 +468,6 @@
     </details>
   </section>
 
-     <style>
-  .announcement-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    max-width: 500px;
-    width: 80%;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    font-size: 18px;
-    line-height: 1.5;
-  }
-
-  .modal-content .secret-trigger {
-    color: #007bff;
-    cursor: pointer;
-    font-weight: bold;
-    text-decoration: underline;
-  }
-
-  body.modal-open {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    overflow: hidden;
-  }
-</style>
-
 <style>
   .announcement-modal {
     position: fixed;
@@ -534,13 +492,14 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     font-size: 18px;
     line-height: 1.6;
-    color: #d00; /* 红色文本 */
+    color: #d00; /* 全部红色文本 */
   }
 
   .modal-content .secret-trigger {
-    color: inherit; /* 和文本一样的颜色 */
+    color: inherit;
     cursor: pointer;
     font-weight: inherit;
+    text-decoration: none; /* 取消下划线 */
     transition: opacity 0.3s;
   }
 
@@ -558,12 +517,10 @@
 </style>
 
 <script>
-  // 保存当前滚动位置并锁定页面
   const scrollY = window.scrollY;
   document.body.style.top = `-${scrollY}px`;
   document.body.classList.add('modal-open');
 
-  // 创建弹窗
   const modal = document.createElement('div');
   modal.className = 'announcement-modal';
   modal.innerHTML = `
@@ -571,10 +528,8 @@
       ⚠️ 该页面已于 3月22日 停止维护和<span class="secret-trigger">访问</span>！⚠️
     </div>
   `;
-
   document.body.appendChild(modal);
 
-  // 点击“访问”后关闭弹窗并恢复滚动
   modal.querySelector('.secret-trigger').addEventListener('click', () => {
     document.body.removeChild(modal);
     document.body.classList.remove('modal-open');
