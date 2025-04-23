@@ -479,40 +479,7 @@
   document.body.style.right = '0';
   document.body.style.overflow = 'hidden';
 </script>
-
-  <script>
-    // 创建遮罩层
-    const overlay = document.createElement('div');
-    overlay.className = 'fullscreen-overlay';
-    overlay.innerHTML = `
-      <div class="warning-text">
-        ⚠️ 该页面已于 3月22日 停止维护和<span class="secret-trigger">访问</span>！ ⚠️
-      </div>
-    `;
-
-    // 添加遮罩层到页面
-    document.body.appendChild(overlay);
-
-    // 点击“访问”后移除遮罩层并允许滚动
-   overlay.querySelector('.secret-trigger').addEventListener('click', () => {
-  // Remove the overlay
-  document.body.removeChild(overlay);
-
-  // Retrieve the stored scroll position
-  const scrollY = document.body.style.top;
-  
-  // Remove the fixed positioning and other styles
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.overflow = '';
-
-  // Restore the scroll position
-  window.scrollTo(0, parseInt(scrollY || '0') * -1);
-});
-  </script>
-  
+     
 <section id="vip">
   <h2 style="text-align:center; font-size:2rem; margin-bottom:1rem; color: yellow;">班级荣誉墙</h2>
   <div class="profile-container">
