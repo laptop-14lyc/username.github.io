@@ -980,9 +980,9 @@
   </details>
 </section>
 
-<section id="games">
+ <section id="games">
   <details open>
-    <summary>五子棋（AI - Minimax + α–β 剪枝版）</summary>
+    <summary>五子棋（机械革命4060提供远程算力支持）</summary>
     <div class="link-buttons">
       <canvas id="gobang" width="600" height="600" style="border:1px solid #ccc;"></canvas>
       <br>
@@ -995,53 +995,27 @@
   <script>
     const canvas = document.getElementById("gobang");
     const ctx = canvas.getContext("2d");
+
     const size = 15;
     const gridSize = canvas.width / size;
-    const HUMAN = 'O', AI = 'X';
 
     let board = Array.from({ length: size }, () => Array(size).fill(null));
     let history = [];
     let gameOver = false;
     let replayTimer = null;
     let replayIndex = 0;
-
-    // Zobrist 哈希初始化
-    const zobristTable = (() => {
-      const table = [];
-      for (let i = 0; i < size; i++) table[i] = [];
-      for (let i = 0; i < size; i++) {
-        for (let j = 0; j < size; j++) {
-          table[i][j] = { O: rand32(), X: rand32() };
-        }
-      }
-      return table;
-    })();
-    let zobristHash = 0;
-    const transTable = new Map();
-
-    function rand32() {
-      return Math.floor(Math.random() * 0x100000000);
-    }
-
-    // 模式列表 + 分值
-    const PATTERNS = [
-      { reg: /XXXXX/, score: 100000 },
-      { reg: /_XXXX_/, score: 10000 },
-      { reg: /(X_XXX|XX_XX|XXX_X)/, score: 5000 },
-      { reg: /_XXX_/, score: 1000 },
-      { reg: /(O_XXX|XX_ O)/, score: 500 },
-      // 更多模式可补充
-    ];
+    const HUMAN = "O", AI = "X";
 
     function drawBoard() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#333';
-      const offset = gridSize / 2;
+      ctx.strokeStyle = "#333";
       for (let i = 0; i < size; i++) {
+        const offset = gridSize / 2;
         ctx.beginPath();
         ctx.moveTo(offset, offset + i * gridSize);
         ctx.lineTo(canvas.width - offset, offset + i * gridSize);
         ctx.stroke();
+
         ctx.beginPath();
         ctx.moveTo(offset + i * gridSize, offset);
         ctx.lineTo(offset + i * gridSize, canvas.height - offset);
@@ -1051,27 +1025,24 @@
 
     function drawPiece(x, y, player) {
       ctx.beginPath();
-      ctx.font = '20px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = player === HUMAN ? '#000' : '#d00';
-      ctx.fillText(player, x * gridSize + gridSize/2, y * gridSize + gridSize/2);
+      ctx.font = "20px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = player === HUMAN ? "#000" : "#d00";
+      ctx.fillText(player, x * gridSize + gridSize / 2, y * gridSize + gridSize / 2);
     }
 
     function placePiece(x, y, player) {
       if (board[x][y] || gameOver) return;
       board[x][y] = player;
-      // 更新 Zobrist 哈希
-      zobristHash ^= zobristTable[x][y][player];
       history.push({ x, y, player });
       drawPiece(x, y, player);
+
       if (checkWin(x, y, player)) {
         gameOver = true;
         setTimeout(() => alert(`${player} 赢了！`), 100);
       }
     }
-
-    canvas.addEventListener('click', canvasClick);
 
     function canvasClick(e) {
       if (gameOver || replayTimer) return;
@@ -1084,119 +1055,130 @@
       }
     }
 
-    // 评估函数：根据行、列、斜线字符串匹配模式评分
-    function evaluate(player) {
-      let score = 0;
-      const lines = [];
-      // 收集所有方向字符串
-      for (let i = 0; i < size; i++) {
-        lines.push(board[i].map(c=>c||'_').join(''));// 行
-        lines.push(board.map(r=>r[i]||'_').join(''));// 列
-      }
-      // 斜线
-      for (let k = -size+1; k < size; k++) {
-        let s1 = '', s2 = '';
-        for (let i = 0; i < size; i++) {
-          const j = i + k;
-          s1 += (j>=0 && j<size ? board[i][j]||'_' : '_');
-          s2 += (j>=0 && j<size ? board[i][size-1-j]||'_' : '_');
-        }
-        lines.push(s1, s2);
-      }
-      // 模式匹配
-      for (const line of lines) {
-        for (const {reg,score:pt} of PATTERNS) {
-          if (reg.test(line.replace(/O/g, player===AI?'O':'_').replace(/X/g, player===HUMAN?'X':'_'))) {
-            score += pt;
-          }
-        }
-      }
-      return score;
-    }
-
-    // Minimax + α–β 剪枝
-    function minimax(depth, alpha, beta, maximizing) {
-      const key = zobristHash + ':' + depth + ':' + maximizing;
-      if (transTable.has(key)) return transTable.get(key);
-      if (depth === 0) {
-        const val = evaluate(AI) - evaluate(HUMAN);
-        return val;
-      }
-      let best;
-      if (maximizing) {
-        let maxEval = -Infinity;
-        for (let i=0;i<size;i++) for (let j=0;j<size;j++) {
-          if (!board[i][j]) {
-            placePiece(i,j,AI);
-            const eval = minimax(depth-1, alpha, beta, false);
-            undoPiece(i,j,AI);
-            if (eval > maxEval) maxEval = eval;
-            alpha = Math.max(alpha, eval);
-            if (beta <= alpha) break;
-          }
-        }
-        best = maxEval;
-      } else {
-        let minEval = Infinity;
-        for (let i=0;i<size;i++) for (let j=0;j<size;j++) {
-          if (!board[i][j]) {
-            placePiece(i,j,HUMAN);
-            const eval = minimax(depth-1, alpha, beta, true);
-            undoPiece(i,j,HUMAN);
-            if (eval < minEval) minEval = eval;
-            beta = Math.min(beta, eval);
-            if (beta <= alpha) break;
-          }
-        }
-        best = minEval;
-      }
-      transTable.set(key, best);
-      return best;
-    }
-
-    function getBestMove() {
-      let bestMove = null;
-      let bestScore = -Infinity;
-      const depth = 3; // 迭代加深可改为动态
-      for (let i=0;i<size;i++) for (let j=0;j<size;j++) {
-        if (!board[i][j]) {
-          placePiece(i,j,AI);
-          const score = minimax(depth-1, -Infinity, Infinity, false);
-          undoPiece(i,j,AI);
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = {x:i, y:j};
-          }
-        }
-      }
-      return bestMove;
-    }
+    canvas.addEventListener("click", canvasClick);
 
     function aiMove() {
-      const best = getBestMove();
+      let best = null, maxScore = -Infinity;
+
+      for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+          if (!board[x][y]) {
+            let myScore = getScore(x, y, AI);
+            let oppScore = getScore(x, y, HUMAN) * 1.4;
+            let score = myScore + oppScore;
+            if (score > maxScore) {
+              maxScore = score;
+              best = { x, y };
+            }
+          }
+        }
+      }
+
       if (best) placePiece(best.x, best.y, AI);
     }
 
-    function undoPiece(x,y,player) {
-      board[x][y] = null;
-      zobristHash ^= zobristTable[x][y][player];
+    function getScore(x, y, player) {
+      const lines = [[1,0],[0,1],[1,1],[1,-1]];
+      let score = 0;
+
+      for (const [dx, dy] of lines) {
+        let count = 1, block = 0;
+
+        for (let dir = -1; dir <= 1; dir += 2) {
+          let i = x + dx * dir;
+          let j = y + dy * dir;
+          while (
+            i >= 0 && i < size &&
+            j >= 0 && j < size
+          ) {
+            if (board[i][j] === player) {
+              count++;
+            } else if (board[i][j] !== null) {
+              block++;
+              break;
+            } else break;
+            i += dx * dir;
+            j += dy * dir;
+          }
+        }
+
+        if (count >= 5) score += 10000;
+        else if (count === 4 && block === 0) score += 5000;
+        else if (count === 4) score += 1000;
+        else if (count === 3 && block === 0) score += 800;
+        else if (count === 3) score += 300;
+        else if (count === 2) score += 100;
+      }
+
+      return score;
     }
 
-    // 胜负检测同原版
-    function checkWin(x,y,player){ /* ... 保持原有逻辑 ... */ }
+    function checkWin(x, y, player) {
+      const directions = [[1,0],[0,1],[1,1],[1,-1]];
+      for (let [dx, dy] of directions) {
+        let count = 1;
+        for (let dir = -1; dir <= 1; dir += 2) {
+          let i = x + dx * dir;
+          let j = y + dy * dir;
+          while (
+            i >= 0 && i < size &&
+            j >= 0 && j < size &&
+            board[i][j] === player
+          ) {
+            count++;
+            i += dx * dir;
+            j += dy * dir;
+          }
+        }
+        if (count >= 5) return true;
+      }
+      return false;
+    }
 
-    function resetBoardOnly() { /* ... */ }
-    function resetGame() { /* ... */ }
-    function startReplay() { /* ... */ }
-    function stopReplay() { /* ... */ }
+    function startReplay() {
+      if (replayTimer || history.length === 0) return;
+
+      resetBoardOnly();
+      replayTimer = setInterval(() => {
+        if (replayIndex >= history.length) {
+          clearInterval(replayTimer);
+          replayTimer = null;
+          replayIndex = 0;
+          return;
+        }
+        const step = history[replayIndex++];
+        board[step.x][step.y] = step.player;
+        drawPiece(step.x, step.y, step.player);
+      }, 500);
+    }
+
+    function stopReplay() {
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
+      }
+    }
+
+    function resetBoardOnly() {
+      board = Array.from({ length: size }, () => Array(size).fill(null));
+      drawBoard();
+    }
+
+    function resetGame() {
+      stopReplay();
+      gameOver = false;
+      replayIndex = 0;
+      history = [];
+      resetBoardOnly();
+      setTimeout(aiMove, 200); // AI 先手
+    }
 
     // 初始化
     drawBoard();
-    setTimeout(aiMove,200);
+    setTimeout(aiMove, 200); // AI 先手
   </script>
 </section>
-
-
+     
   <section id="games">
   <details>
     <summary>五子棋（原版）</summary>
