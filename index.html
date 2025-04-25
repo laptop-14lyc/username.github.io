@@ -1334,7 +1334,66 @@
         if (!gameOver) setTimeout(aiMove, 300);
       }
     });
-    
+    function getBestMove(board, aiColor, config) {
+  let bestMove = null;
+  let maxScore = -Infinity;
+  const candidates = getCandidatePositions(board, config);
+
+  // 设置超时保护
+  const start = Date.now();
+  const TIME_LIMIT = 1000; // 1000 毫秒，也就是 1 秒
+
+  function minimax(board, depth, alpha, beta, isMaximizing) {
+    // 超时保护
+    if (Date.now() - start > TIME_LIMIT) {
+      return evaluateBoard(board, aiColor); // 返回当前局势评估
+    }
+
+    // 终止条件：深度为0 或者胜负已分
+    if (depth === 0 || isGameOver(board)) {
+      return evaluateBoard(board, aiColor);
+    }
+
+    const moves = getCandidatePositions(board, config);
+
+    if (isMaximizing) {
+      let maxEval = -Infinity;
+      for (const move of moves) {
+        board[move.x][move.y] = aiColor;
+        const eval = minimax(board, depth - 1, alpha, beta, false);
+        board[move.x][move.y] = null;
+        maxEval = Math.max(maxEval, eval);
+        alpha = Math.max(alpha, eval);
+        if (beta <= alpha) break;
+      }
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      for (const move of moves) {
+        board[move.x][move.y] = getOpponent(aiColor);
+        const eval = minimax(board, depth - 1, alpha, beta, true);
+        board[move.x][move.y] = null;
+        minEval = Math.min(minEval, eval);
+        beta = Math.min(beta, eval);
+        if (beta <= alpha) break;
+      }
+      return minEval;
+    }
+  }
+
+  for (const move of candidates) {
+    board[move.x][move.y] = aiColor;
+    const score = minimax(board, config.depth, -Infinity, Infinity, false);
+    board[move.x][move.y] = null;
+
+    if (score > maxScore) {
+      maxScore = score;
+      bestMove = move;
+    }
+  }
+
+  return bestMove;
+}
     // 启动
     initAIConfig();
     resetGame();
