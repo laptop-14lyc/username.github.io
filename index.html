@@ -1516,6 +1516,125 @@
 
     showHistory();
     switchMode('single');
+}
+        } else if (mode === 'double') {
+            if (phase === 'Aattack' && cell.parentNode.id === 'boardB') {
+                handleDoubleShot('A', row, col);
+            } else if (phase === 'Battack' && cell.parentNode.id === 'boardA') {
+                handleDoubleShot('B', row, col);
+            }
+        }
+    }
+
+    // 绑定按钮事件
+    modeSingleBtn.addEventListener('click', () => {
+        mode = 'single';
+        initBoards();
+        initData();
+        placementControls.style.display = 'block';
+        hideControls.style.display = 'none';
+        confirmControls.style.display = 'none';
+        message('单人模式：请布置你的舰队');
+        phase = 'setupA';
+    });
+
+    modeDoubleBtn.addEventListener('click', () => {
+        mode = 'double';
+        initBoards();
+        initData();
+        placementControls.style.display = 'block';
+        hideControls.style.display = 'none';
+        confirmControls.style.display = 'none';
+        message('双人模式：A方请布置舰队');
+        phase = 'setupA';
+    });
+
+    randomBtn.addEventListener('click', () => {
+        if (phase === 'setupA') {
+            clearBoardAPlacement();
+            placeAllShipsRandom(boardAData, shipsA, boardADiv);
+            message('随机布置完成，点击完成布阵');
+        } else if (phase === 'setupB') {
+            clearBoardBPlacement();
+            placeAllShipsRandom(boardBData, shipsB, boardBDiv);
+            message('随机布置完成，点击完成布阵');
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        if (phase === 'setupA') {
+            clearBoardAPlacement();
+            message('重新布置A方舰队');
+        } else if (phase === 'setupB') {
+            clearBoardBPlacement();
+            message('重新布置B方舰队');
+        }
+    });
+
+    orientBtn.addEventListener('click', () => {
+        orientation = orientation === 'horizontal' ? 'vertical' : 'horizontal';
+        orientBtn.textContent = '当前方向：' + (orientation === 'horizontal' ? '水平' : '垂直');
+    });
+
+    doneBtn.addEventListener('click', () => {
+        if (phase === 'setupA') {
+            if (shipsA.some(s => s.positions.length === 0)) {
+                message('请完成所有舰艇布置');
+                return;
+            }
+            if (mode === 'single') {
+                placementControls.style.display = 'none';
+                placeAllShipsRandom(boardBData, shipsB, boardBDiv);
+                boardBDiv.querySelectorAll('.cell.ship').forEach(cell => cell.classList.remove('ship')); // 隐藏AI舰船
+                message('开始游戏！你的回合');
+                phase = 'playerTurn';
+            } else {
+                placementControls.style.display = 'block';
+                hideControls.style.display = 'none';
+                clearBoardBPlacement();
+                message('B方请布置舰队');
+                phase = 'setupB';
+            }
+        } else if (phase === 'setupB') {
+            if (shipsB.some(s => s.positions.length === 0)) {
+                message('请完成所有舰艇布置');
+                return;
+            }
+            placementControls.style.display = 'none';
+            hideControls.style.display = 'block';
+            message('布置完成，准备开始游戏！');
+            boardADiv.style.visibility = 'hidden';
+            boardBDiv.style.visibility = 'hidden';
+            phase = 'confirmA';
+            confirmBtn.textContent = 'A方确认';
+            confirmControls.style.display = 'block';
+        }
+    });
+
+    hideBtn.addEventListener('click', () => {
+        boardADiv.style.visibility = 'hidden';
+        boardBDiv.style.visibility = 'hidden';
+        message('阵地已隐藏，轮到确认阶段');
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        confirmControls.style.display = 'none';
+        boardADiv.style.visibility = 'visible';
+        boardBDiv.style.visibility = 'visible';
+        if (phase === 'confirmA') {
+            phase = 'Aattack';
+            message('A方攻击！');
+        } else if (phase === 'confirmB') {
+            phase = 'Battack';
+            message('B方攻击！');
+        }
+    });
+
+    // 页面加载时
+    window.onload = () => {
+        initBoards();
+        showHistory();
+    };
     </script>
 </body>
 </section>
