@@ -981,424 +981,324 @@
 </section>
 
 <section id="games">
-<title>五子棋（仅最后一个可计入排行榜)</title>
-  <style>
-    .difficulty-box {
-      margin: 10px 0;
-      padding: 8px;
-      background: #f5f5f5;
-      border-radius: 4px;
-    }
-    #difficulty {
-      padding: 6px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    .control-panel {
-      margin-top: 15px;
-      display: flex;
-      gap: 10px;
-    }
-    button {
-      padding: 8px 16px;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    canvas {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-  </style>
-</head>
-<body>
-  <section id="games">
-    <details open>
-      <summary>五子棋（仅最后一个可计入排行榜）</summary>
-      <div class="link-buttons">
-        <div class="difficulty-box">
-          <label>难度：</label>
-          <select id="difficulty" onchange="resetGame()">
-            <option value="easy">白痴级-手机即可</option>
-            <option value="normal" selected>智障-核显级电脑</option>
-            <option value="hard">弱智-GTX级电脑</option>
-            <option value="pro">普通-至少为rtx4070及以上【4060无法流畅运行！！！0</option>
-          </select>
-        </div>
-        <canvas id="gobang" width="600" height="600"></canvas>
-        <div class="control-panel">
-          <button onclick="startReplay()">回放棋谱</button>
-          <button onclick="stopReplay()">暂停</button>
-          <button onclick="resetGame()">新游戏</button>
-        </div>
+  <details open>
+    <summary>五子棋（仅最后一个可计入排行榜）</summary>
+    <div class="link-buttons">
+      <div class="difficulty-box">
+        <label>难度：</label>
+        <select id="difficulty" onchange="onDifficultyChange()">
+          <option value="easy">白痴级-手机即可</option>
+          <option value="normal" selected>智障-核显级电脑</option>
+          <option value="hard">弱智-GTX级电脑</option>
+          <option value="pro">普通-至少为rtx4070及以上【4060无法流畅运行！！！0</option>
+        </select>
       </div>
-    </details>
-  </section>
+      <canvas id="gobang" width="600" height="600"></canvas>
+      <div class="control-panel">
+        <button onclick="startReplay()">回放棋谱</button>
+        <button onclick="stopReplay()">暂停</button>
+        <button onclick="resetGame()">新游戏</button>
+      </div>
+    </div>
+  </details>
+</section>
 
-  <script>
-    const canvas = document.getElementById("gobang");
-    const ctx = canvas.getContext("2d");
-    const size = 15;
-    const gridSize = canvas.width / size;
-    
-    let board, history, gameOver, replayTimer, replayIndex;
-    const HUMAN = "⚫", AI = "⚪"; 
-    let AI_CONFIG = {};
-    
-    const DIFFICULTY_SETTINGS = {
-      easy:   { depth: 2, defense: 1.5, width: 0.15 },
-      normal: { depth: 3, defense: 1.8, width: 0.25 },
-      hard:   { depth: 4, defense: 2.0, width: 0.35 },
-      pro:    { depth: 5, defense: 2.2, width: 0.45 }
+<script>
+  const canvas = document.getElementById("gobang");
+  const ctx = canvas.getContext("2d");
+  const size = 15;
+  const gridSize = canvas.width / size;
+
+  let board, history, gameOver, replayTimer, replayIndex;
+  const HUMAN = "⚫", AI = "⚪";
+  let AI_CONFIG = {};
+
+  const DIFFICULTY_SETTINGS = {
+    easy:   { depth: 2, defense: 1.5, width: 0.15 },
+    normal: { depth: 3, defense: 1.8, width: 0.25 },
+    hard:   { depth: 4, defense: 2.0, width: 0.35 },
+    pro:    { depth: 5, defense: 2.2, width: 0.45 }
+  };
+
+  function initAIConfig() {
+    const level = document.getElementById("difficulty").value;
+    const { depth, defense, width } = DIFFICULTY_SETTINGS[level];
+    AI_CONFIG = {
+      SEARCH_DEPTH: depth,
+      DEFENSE_WEIGHT: defense,
+      SEARCH_WIDTH: width,
+      OPENING_BOOK: {
+        center: [7,7],
+        starPoints: [[3,3],[3,11],[11,3],[11,11],[7,3],[3,7],[7,11],[11,7]]
+      },
+      PATTERNS: {
+        FIVE: 1e6,
+        DOUBLE_LIVE_FOUR: 5e5,
+        LIVE_FOUR: 3e4,
+        DIE_FOUR: 1.5e4,
+        DOUBLE_LIVE_THREE: 2.5e4,
+        LIVE_THREE: 1.2e4,
+        DIE_THREE: 5e3,
+        LIVE_TWO: 2e3
+      }
     };
-    
-    function initAIConfig() {
-      const level = document.getElementById("difficulty").value;
-      const { depth, defense, width } = DIFFICULTY_SETTINGS[level];
-      AI_CONFIG = {
-        SEARCH_DEPTH: depth,
-        DEFENSE_WEIGHT: defense,
-        SEARCH_WIDTH: width,
-        OPENING_BOOK: {
-          center: [7,7],
-          starPoints: [[3,3],[3,11],[11,3],[11,11],[7,3],[3,7],[7,11],[11,7]]
-        },
-        PATTERNS: {
-          FIVE: 1e6,
-          DOUBLE_LIVE_FOUR: 5e5,
-          LIVE_FOUR: 3e4,
-          DIE_FOUR: 1.5e4,
-          DOUBLE_LIVE_THREE: 2.5e4,
-          LIVE_THREE: 1.2e4,
-          DIE_THREE: 5e3,
-          LIVE_TWO: 2e3
-        }
-      };
-    }
-    
-    function drawBoard() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 1;
-      for (let i = 0; i < size; i++) {
-        const pos = gridSize/2 + i * gridSize;
-        ctx.beginPath();
-        ctx.moveTo(gridSize/2, pos);
-        ctx.lineTo(canvas.width - gridSize/2, pos);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(pos, gridSize/2);
-        ctx.lineTo(pos, canvas.height - gridSize/2);
-        ctx.stroke();
-      }
-      [[3,3],[3,11],[11,3],[11,11],[7,7]].forEach(([x,y]) => {
-        ctx.beginPath();
-        ctx.arc(x*gridSize + gridSize/2, y*gridSize + gridSize/2, 3, 0, Math.PI*2);
-        ctx.fillStyle = "#333";
-        ctx.fill();
-      });
-    }
-    
-    function drawPiece(x, y, player) {
-      ctx.beginPath();
-      ctx.arc(x*gridSize + gridSize/2, y*gridSize + gridSize/2, gridSize*0.4, 0, Math.PI*2);
-      ctx.fillStyle = player === HUMAN ? "#333" : "#fff";
-      ctx.strokeStyle = "#666";
-      ctx.lineWidth = 2;
-      ctx.fill();
-      ctx.stroke();
-    }
-    
-    function placePiece(x, y, player) {
-      if (board[x][y] || gameOver) return;
-      board[x][y] = player;
-      history.push({ x, y, player });
-      drawPiece(x, y, player);
-      if (checkWin(x, y, player)) {
-        gameOver = true;
-        setTimeout(() => alert(`${player === HUMAN ? "黑方" : "白方"}获胜！`), 100);
-      }
-    }
-    
-    function checkWin(x, y, player) {
-      const dirs = [[1,0],[0,1],[1,1],[1,-1]];
-      return dirs.some(([dx,dy]) => {
-        let count = 1;
-        for (let d of [1, -1]) {
-          let i = x + dx*d, j = y + dy*d;
-          while (i>=0&&i<size&&j>=0&&j<size&&board[i][j]===player) {
-            count++; i+=dx*d; j+=dy*d;
-          }
-        }
-        return count >= 5;
-      });
-    }
-    
-    function aiMove() {
-      setTimeout(() => {
-        const move = getBestMove() || getFallbackMove();
-        placePiece(move.x, move.y, AI);
-      }, 300);
-    }
-    
-    function getBestMove() {
-      const defenseMove = findCriticalDefense();
-      if (defenseMove) return defenseMove;
-      if (history.length < 2) {
-        const opening = getOpeningMove();
-        if (opening) return opening;
-      }
-      let bestScore = -Infinity, bestMoves = [];
-      const candidates = getCandidatePositions();
-      candidates.forEach(({x, y}) => {
-        board[x][y] = AI;
-        const score = minimax(0, -Infinity, Infinity, false);
-        board[x][y] = null;
-        if (score > bestScore) {
-          bestScore = score;
-          bestMoves = [{x, y}];
-        } else if (score === bestScore) {
-          bestMoves.push({x, y});
-        }
-      });
-      return bestMoves[Math.floor(Math.random() * bestMoves.length)];
-    }
-    
-    // **缺失函数：当没有搜索结果时的后备随机关棋**
-    function getFallbackMove() {
-      const cands = getCandidatePositions();
-      return cands.length
-        ? cands[Math.floor(Math.random() * cands.length)]
-        : { x: 7, y: 7 };
-    }
-    
-    // **缺失函数：棋谱回放**
-    function startReplay() {
-      if (replayTimer || history.length === 0) return;
-      gameOver = true;
-      drawBoard();
-      replayIndex = 0;
-      replayTimer = setInterval(() => {
-        if (replayIndex >= history.length) {
-          stopReplay();
-          return;
-        }
-        const m = history[replayIndex++];
-        drawPiece(m.x, m.y, m.player);
-      }, 500);
-    }
-    
-    function stopReplay() {
-      if (replayTimer) {
-        clearInterval(replayTimer);
-        replayTimer = null;
-      }
-    }
-    
-    // —— 以下为搜索和评估等核心函数 —— 
-    function minimax(depth, alpha, beta, isMaximizing) {
-      if (depth === AI_CONFIG.SEARCH_DEPTH || gameOver) {
-        return evaluateBoard();
-      }
-      const cands = getCandidatePositions();
-      if (isMaximizing) {
-        let maxScore = -Infinity;
-        for (const {x, y} of cands) {
-          board[x][y] = AI;
-          const s = minimax(depth+1, alpha, beta, false);
-          board[x][y] = null;
-          maxScore = Math.max(maxScore, s);
-          alpha = Math.max(alpha, s);
-          if (beta <= alpha) break;
-        }
-        return maxScore;
-      } else {
-        let minScore = Infinity;
-        for (const {x, y} of cands) {
-          board[x][y] = HUMAN;
-          const s = minimax(depth+1, alpha, beta, true);
-          board[x][y] = null;
-          minScore = Math.min(minScore, s);
-          beta = Math.min(beta, s);
-          if (beta <= alpha) break;
-        }
-        return minScore;
-      }
-    }
-    
-    function getCandidatePositions() {
-      const c = [];
-      for (let x=0; x<size; x++) {
-        for (let y=0; y<size; y++) {
-          if (!board[x][y] && hasNeighbor(x, y)) {
-            c.push({ x, y, score: evaluatePosition(x,y) });
-          }
-        }
-      }
-      return c.sort((a,b) => b.score - a.score)
-              .slice(0, Math.ceil(c.length * AI_CONFIG.SEARCH_WIDTH));
-    }
-    
-    function hasNeighbor(x, y, dist = 2) {
-      for (let dx=-dist; dx<=dist; dx++) {
-        for (let dy=-dist; dy<=dist; dy++) {
-          const nx = x+dx, ny = y+dy;
-          if (nx>=0&&nx<size&&ny>=0&&ny<size&&board[nx][ny]) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    
-    function evaluateBoard() {
-      let s = 0;
-      for (let x=0; x<size; x++) {
-        for (let y=0; y<size; y++) {
-          if (board[x][y] === AI) {
-            s += evaluatePosition(x, y, AI);
-          } else if (board[x][y] === HUMAN) {
-            s -= evaluatePosition(x, y, HUMAN) * AI_CONFIG.DEFENSE_WEIGHT;
-          }
-        }
-      }
-      return s;
-    }
-    
-    function evaluatePosition(x, y, player) {
-      let score = 0;
-      const dirs = [[1,0],[0,1],[1,1],[1,-1]];
-      dirs.forEach(([dx, dy]) => {
-        const line = [player];
-        for (let i=1; i<=4; i++) {
-          const nx = x+dx*i, ny = y+dy*i;
-          if (nx<0||nx>=size||ny<0||ny>=size) break;
-          line.push(board[nx][ny]||null);
-        }
-        for (let i=1; i<=4; i++) {
-          const nx = x-dx*i, ny = y-dy*i;
-          if (nx<0||nx>=size||ny<0||ny>=size) break;
-          line.unshift(board[nx][ny]||null);
-        }
-        score += evaluateLine(line.map(c => c===player?'1':c===null?'0':'2').join(''), player);
-      });
-      return score;
-    }
-    
-    function evaluateLine(str, player) {
-      const P = AI_CONFIG.PATTERNS;
-      if (/11111/.test(str))        return P.FIVE;
-      if (/011110/.test(str))      return P.LIVE_FOUR;
-      if (/211110|011112/.test(str)) return P.DIE_FOUR;
-      if (/01110/.test(str))       return P.LIVE_THREE;
-      if (/21110|01112|010110/.test(str)) return P.DIE_THREE;
-      if (/001100|01010/.test(str)) return P.LIVE_TWO;
-      return 0;
-    }
-    
-    // 可选：简单的抢先防御和开局
-    function findCriticalDefense() {
-      // …（此处可按需补充检测对方活四、活三等紧急情况）…
-      return null;
-    }
-    function getOpeningMove() {
-      // …（此处可根据 OPENING_BOOK 返回开局落子）…
-      const pts = AI_CONFIG.OPENING_BOOK.starPoints;
-      return pts[Math.floor(Math.random()*pts.length)].map((v,i)=>pts.length)[0]
-        ? { x:7, y:7 }
-        : null;
-    }
-    
-    function resetGame() {
-      stopReplay();
-      initAIConfig();
-      board = Array.from({ length: size }, () => Array(size).fill(null));
-      history = [];
-      gameOver = false;
-      replayIndex = 0;
-      drawBoard();
-      if (Math.random() < 0.5) setTimeout(aiMove, 200);
-    }
-    
-    canvas.addEventListener("click", e => {
-      if (gameOver || replayTimer) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX-rect.left)/gridSize);
-      const y = Math.floor((e.clientY-rect.top)/gridSize);
-      if (x>=0&&x<size&&y>=0&&y<size&&!board[x][y]) {
-        placePiece(x, y, HUMAN);
-        if (!gameOver) setTimeout(aiMove, 300);
-      }
-    });
-    function getBestMove(board, aiColor, config) {
-  let bestMove = null;
-  let maxScore = -Infinity;
-  const candidates = getCandidatePositions(board, config);
-
-  // 设置超时保护
-  const start = Date.now();
-  const TIME_LIMIT = 1000; // 1000 毫秒，也就是 1 秒
-
-  function minimax(board, depth, alpha, beta, isMaximizing) {
-    // 超时保护
-    if (Date.now() - start > TIME_LIMIT) {
-      return evaluateBoard(board, aiColor); // 返回当前局势评估
-    }
-
-    // 终止条件：深度为0 或者胜负已分
-    if (depth === 0 || isGameOver(board)) {
-      return evaluateBoard(board, aiColor);
-    }
-
-    const moves = getCandidatePositions(board, config);
-
-    if (isMaximizing) {
-      let maxEval = -Infinity;
-      for (const move of moves) {
-        board[move.x][move.y] = aiColor;
-        const eval = minimax(board, depth - 1, alpha, beta, false);
-        board[move.x][move.y] = null;
-        maxEval = Math.max(maxEval, eval);
-        alpha = Math.max(alpha, eval);
-        if (beta <= alpha) break;
-      }
-      return maxEval;
-    } else {
-      let minEval = Infinity;
-      for (const move of moves) {
-        board[move.x][move.y] = getOpponent(aiColor);
-        const eval = minimax(board, depth - 1, alpha, beta, true);
-        board[move.x][move.y] = null;
-        minEval = Math.min(minEval, eval);
-        beta = Math.min(beta, eval);
-        if (beta <= alpha) break;
-      }
-      return minEval;
-    }
   }
 
-  for (const move of candidates) {
-    board[move.x][move.y] = aiColor;
-    const score = minimax(board, config.depth, -Infinity, Infinity, false);
-    board[move.x][move.y] = null;
-
-    if (score > maxScore) {
-      maxScore = score;
-      bestMove = move;
-    }
-  }
-
-  return bestMove;
-}
-    // 启动
+  function onDifficultyChange() {
     initAIConfig();
     resetGame();
-  </script>
-</section>
+  }
+
+  function drawBoard() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < size; i++) {
+      const pos = gridSize/2 + i * gridSize;
+      ctx.beginPath(); ctx.moveTo(gridSize/2, pos); ctx.lineTo(canvas.width - gridSize/2, pos); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pos, gridSize/2); ctx.lineTo(pos, canvas.height - gridSize/2); ctx.stroke();
+    }
+    [[3,3],[3,11],[11,3],[11,11],[7,7]].forEach(([x,y]) => {
+      ctx.beginPath();
+      ctx.arc(x*gridSize + gridSize/2, y*gridSize + gridSize/2, 3, 0, Math.PI*2);
+      ctx.fillStyle = "#333";
+      ctx.fill();
+    });
+  }
+
+  function drawPiece(x, y, player) {
+    ctx.beginPath();
+    ctx.arc(x*gridSize + gridSize/2, y*gridSize + gridSize/2, gridSize*0.4, 0, Math.PI*2);
+    ctx.fillStyle = player === HUMAN ? "#333" : "#fff";
+    ctx.strokeStyle = "#666";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function placePiece(x, y, player) {
+    if (board[x][y] || gameOver) return;
+    board[x][y] = player;
+    history.push({ x, y, player });
+    drawPiece(x, y, player);
+    if (checkWin(x, y, player)) {
+      gameOver = true;
+      setTimeout(() => alert(`${player === HUMAN ? "黑方" : "白方"}获胜！`), 100);
+    }
+  }
+
+  function checkWin(x, y, player) {
+    const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+    return dirs.some(([dx,dy]) => {
+      let count = 1;
+      for (let d of [1, -1]) {
+        let i = x + dx*d, j = y + dy*d;
+        while (i>=0 && i<size && j>=0 && j<size && board[i][j]===player) {
+          count++; i+=dx*d; j+=dy*d;
+        }
+      }
+      return count >= 5;
+    });
+  }
+
+  function aiMove() {
+    setTimeout(() => {
+      let move;
+      try {
+        move = getBestMove();
+      } catch (e) {
+        console.error("AI failed:", e);
+      }
+      move = move || getFallbackMove();
+      placePiece(move.x, move.y, AI);
+    }, 300);
+  }
+
+  function getBestMove() {
+    const defenseMove = findCriticalDefense();
+    if (defenseMove) return defenseMove;
+    if (history.length < 2) {
+      const opening = getOpeningMove();
+      if (opening) return opening;
+    }
+    let bestScore = -Infinity, bestMoves = [];
+    const candidates = getCandidatePositions();
+    candidates.forEach(({x, y}) => {
+      board[x][y] = AI;
+      const score = minimax(0, -Infinity, Infinity, false);
+      board[x][y] = null;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMoves = [{x, y}];
+      } else if (score === bestScore) {
+        bestMoves.push({x, y});
+      }
+    });
+    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+  }
+
+  function getFallbackMove() {
+    const cands = getCandidatePositions();
+    return cands.length
+      ? cands[Math.floor(Math.random() * cands.length)]
+      : { x: 7, y: 7 };
+  }
+
+  function startReplay() {
+    if (replayTimer || history.length === 0) return;
+    gameOver = true;
+    drawBoard();
+    replayIndex = 0;
+    replayTimer = setInterval(() => {
+      if (replayIndex >= history.length) {
+        stopReplay();
+        return;
+      }
+      const m = history[replayIndex++];
+      drawPiece(m.x, m.y, m.player);
+    }, 500);
+  }
+
+  function stopReplay() {
+    if (replayTimer) {
+      clearInterval(replayTimer);
+      replayTimer = null;
+    }
+  }
+
+  function minimax(depth, alpha, beta, isMaximizing) {
+    if (depth === AI_CONFIG.SEARCH_DEPTH || gameOver) {
+      return evaluateBoard();
+    }
+    const cands = getCandidatePositions();
+    if (isMaximizing) {
+      let maxScore = -Infinity;
+      for (const {x, y} of cands) {
+        board[x][y] = AI;
+        const s = minimax(depth+1, alpha, beta, false);
+        board[x][y] = null;
+        maxScore = Math.max(maxScore, s);
+        alpha = Math.max(alpha, s);
+        if (beta <= alpha) break;
+      }
+      return maxScore;
+    } else {
+      let minScore = Infinity;
+      for (const {x, y} of cands) {
+        board[x][y] = HUMAN;
+        const s = minimax(depth+1, alpha, beta, true);
+        board[x][y] = null;
+        minScore = Math.min(minScore, s);
+        beta = Math.min(beta, s);
+        if (beta <= alpha) break;
+      }
+      return minScore;
+    }
+  }
+
+  function getCandidatePositions() {
+    const c = [];
+    for (let x=0; x<size; x++) {
+      for (let y=0; y<size; y++) {
+        if (!board[x][y] && hasNeighbor(x, y)) {
+          c.push({ x, y, score: evaluatePosition(x,y) });
+        }
+      }
+    }
+    return c.sort((a,b) => b.score - a.score)
+            .slice(0, Math.ceil(c.length * AI_CONFIG.SEARCH_WIDTH));
+  }
+
+  function hasNeighbor(x, y, dist = 2) {
+    for (let dx=-dist; dx<=dist; dx++) {
+      for (let dy=-dist; dy<=dist; dy++) {
+        const nx = x+dx, ny = y+dy;
+        if (nx>=0&&nx<size&&ny>=0&&ny<size&&board[nx][ny]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function evaluateBoard() {
+    let s = 0;
+    for (let x=0; x<size; x++) {
+      for (let y=0; y<size; y++) {
+        if (board[x][y] === AI) {
+          s += evaluatePosition(x, y, AI);
+        } else if (board[x][y] === HUMAN) {
+          s -= evaluatePosition(x, y, HUMAN) * AI_CONFIG.DEFENSE_WEIGHT;
+        }
+      }
+    }
+    return s;
+  }
+
+  function evaluatePosition(x, y, player) {
+    let score = 0;
+    const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+    dirs.forEach(([dx, dy]) => {
+      const line = [player];
+      for (let i=1; i<=4; i++) {
+        const nx = x+dx*i, ny = y+dy*i;
+        if (nx<0||nx>=size||ny<0||ny>=size) break;
+        line.push(board[nx][ny]||null);
+      }
+      for (let i=1; i<=4; i++) {
+        const nx = x-dx*i, ny = y-dy*i;
+        if (nx<0||nx>=size||ny<0||ny>=size) break;
+        line.unshift(board[nx][ny]||null);
+      }
+      score += evaluateLine(line.map(c => c===player?'1':c===null?'0':'2').join(''), player);
+    });
+    return score;
+  }
+
+  function evaluateLine(str, player) {
+    const P = AI_CONFIG.PATTERNS;
+    if (/11111/.test(str))        return P.FIVE;
+    if (/011110/.test(str))      return P.LIVE_FOUR;
+    if (/211110|011112/.test(str)) return P.DIE_FOUR;
+    if (/01110/.test(str))       return P.LIVE_THREE;
+    if (/21110|01112|010110/.test(str)) return P.DIE_THREE;
+    if (/001100|01010/.test(str)) return P.LIVE_TWO;
+    return 0;
+  }
+
+  function findCriticalDefense() {
+    return null;
+  }
+
+  function getOpeningMove() {
+    const pts = AI_CONFIG.OPENING_BOOK.starPoints;
+    return pts[Math.floor(Math.random() * pts.length)];
+  }
+
+  function resetGame() {
+    stopReplay();
+    board = Array.from({ length: size }, () => Array(size).fill(null));
+    history = [];
+    gameOver = false;
+    replayIndex = 0;
+    drawBoard();
+    if (Math.random() < 0.5) setTimeout(aiMove, 200);
+  }
+
+  canvas.addEventListener("click", e => {
+    if (gameOver || replayTimer) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX-rect.left)/gridSize);
+    const y = Math.floor((e.clientY-rect.top)/gridSize);
+    if (x>=0&&x<size&&y>=0&&y<size&&!board[x][y]) {
+      placePiece(x, y, HUMAN);
+      if (!gameOver) setTimeout(aiMove, 300);
+    }
+  });
+
+  initAIConfig();
+  resetGame();
+</script>
      
       <section id="pvp">
     <details>
